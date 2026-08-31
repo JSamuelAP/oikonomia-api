@@ -9,9 +9,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateCategoryRequest(
-  @NotBlank(message = "El nombre es requerido") @Size(min = 2, max = 50, message = "El nombre debe tener entre {min} y {max} catecteres de longitud") String name,
+  // spotless:off
+  @NotBlank(message = "El nombre es requerido")
+  @Size(min = 2, max = 50, message = "El nombre debe tener entre {min} y {max} catecteres de longitud")
+  String name,
 
-  @NotNull(message = "El tipo de flujo es requerido") FlowType flowType) {
+  @NotNull(message = "El tipo de flujo es requerido")
+  FlowType flowType
+  // spotless:on
+) {
   public CreateCategoryRequest {
     name = trimOrNull(name);
   }

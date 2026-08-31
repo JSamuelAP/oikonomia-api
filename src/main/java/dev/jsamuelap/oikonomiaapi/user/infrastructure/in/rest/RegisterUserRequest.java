@@ -9,13 +9,27 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterUserRequest(
-  @NotBlank(message = "El nombre es requerido") @Size(min = 2, max = 100, message = "El nombre debe tener entre {min} y {max} caracteres de longitud") String firstName,
+  // spotless:off
+  @NotBlank(message = "El nombre es requerido")
+  @Size(min = 2, max = 100, message = "El nombre debe tener entre {min} y {max} caracteres de longitud")
+  String firstName,
 
-  @NotBlank(message = "Los apellidos son requeridos") @Size(min = 2, max = 150, message = "Los apellidos deben tener entre {min} y {max} caracteres de longitud") String lastName,
+  @NotBlank(message = "Los apellidos son requeridos")
+  @Size(min = 2, max = 150, message = "Los apellidos deben tener entre {min} y {max} caracteres de longitud")
+  String lastName,
 
-  @NotBlank(message = "El email es requerido") @Email(message = "El email es inválido") String email,
+  @NotBlank(message = "El email es requerido")
+  @Email(message = "El email es inválido")
+  String email,
 
-  @NotBlank(message = "La contraseña es requerida") @Size(min = 8, max = 100, message = "La contraseña debe tener entre {min} y {max} caracteres de longitud") @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$", message = "La contraseña debe tener un digito, una letra minúscula, una letra mayúscula y un caracter especial") String password) {
+  @NotBlank(message = "La contraseña es requerida")
+  @Size(min = 8, max = 100, message = "La contraseña debe tener entre {min} y {max} caracteres de longitud")
+  @Pattern(
+    regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$",
+    message = "La contraseña debe tener un digito, una letra minúscula, una letra mayúscula y un caracter especial"
+  ) String password
+  // spotless:on
+) {
   public RegisterUserRequest {
     email = normalizeEmail(email);
     firstName = trimOrNull(firstName);

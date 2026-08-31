@@ -7,9 +7,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record AuthenticateUserRequest(
-  @NotBlank(message = "El email es requerido") @Email(message = "El email es inválido") String email,
+  // spotless:off
+  @NotBlank(message = "El email es requerido")
+  @Email(message = "El email es inválido")
+  String email,
 
-  @NotBlank(message = "La contraseña es requerida") @Size(max = 255, message = "La contraseña debe tener máximo {max} caracteres de longitud") String password) {
+  @NotBlank(message = "La contraseña es requerida")
+  @Size(max = 255, message = "La contraseña debe tener máximo {max} caracteres de longitud")
+  String password
+  // spotless:on
+) {
   public AuthenticateUserRequest {
     email = normalizeEmail(email);
   }
