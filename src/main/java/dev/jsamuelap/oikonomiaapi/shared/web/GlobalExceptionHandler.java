@@ -2,6 +2,7 @@ package dev.jsamuelap.oikonomiaapi.shared.web;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -14,6 +15,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.AuthenticationException;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.NotFoundException;
+
+import tools.jackson.databind.exc.ValueInstantiationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,7 +27,9 @@ public class GlobalExceptionHandler {
   public ProblemDetail handleInvalidBodyException(HttpMessageNotReadableException ex) {
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
     problem.setTitle(BAD_REQUEST_TITLE);
-    problem.setDetail("No se pudo leer el cuerpo de la solicitud");
+
+    String detail = extractCustomMessage(ex).orElse("No se pudo leer el cuerpo de la solicitud");
+    problem.setDetail(detail);
     return problem;
   }
 
@@ -56,6 +62,13 @@ public class GlobalExceptionHandler {
     return problem;
   }
 
+  @ExceptionHandler(NotFoundException.class)
+  public ProblemDetail handleNotFound(RuntimeException ex) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    problem.setTitle("Recurso no encontrado");
+    return problem;
+  }
+
   @ExceptionHandler(DomainException.class)
   public ProblemDetail handleDomainException(DomainException ex) {
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
@@ -74,5 +87,16 @@ public class GlobalExceptionHandler {
   private Map<String, String> toErrorMap(FieldError error) {
     return Map.of("field", error.getField(), "message",
       error.getDefaultMessage() != null ? error.getDefaultMessage() : "Valor inválido");
+  }
+
+  private Optional<String> extractCustomMessage(Throwable ex) {
+    Throwable cause = ex.getCause();
+
+    if (cause instanceof ValueInstantiationException valueInstantiation
+      && valueInstantiation.getCause() instanceof IllegalArgumentException illegalArg) {
+      return Optional.ofNullable(illegalArg.getMessage());
+    }
+
+    return Optional.empty();
   }
 }
