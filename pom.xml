@@ -185,6 +185,7 @@
         <version>3.9.0</version>
         <configuration>
           <java>
+            <toggleOffOn/>
             <eclipse>
               <file>config/spotless/eclipse-formatter.xml</file>
             </eclipse>
