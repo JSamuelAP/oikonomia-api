@@ -139,6 +139,8 @@
     <module name="StringLiteralEquality"/>
     <module name="ReturnCount">
       <property name="max" value="5"/>
+      <property name="maxForVoid" value="3"/>
+      <property name="tokens" value="METHOD_DEF"/>
     </module>
 
   </module>
