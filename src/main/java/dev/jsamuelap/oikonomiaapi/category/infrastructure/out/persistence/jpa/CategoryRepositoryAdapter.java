@@ -2,6 +2,7 @@ package dev.jsamuelap.oikonomiaapi.category.infrastructure.out.persistence.jpa;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -25,6 +26,11 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
   @Override
   public Optional<Category> findByIdAndUser(UUID id, UUID userId) {
     return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDomain);
+  }
+
+  @Override
+  public List<Category> findAllById(Set<UUID> categoryIds) {
+    return jpaRepository.findAllById(categoryIds).stream().map(mapper::toDomain).toList();
   }
 
   @Override
