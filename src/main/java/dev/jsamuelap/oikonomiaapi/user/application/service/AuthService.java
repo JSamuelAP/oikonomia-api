@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.AuthenticationException;
-import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.ConflictException;
 import dev.jsamuelap.oikonomiaapi.user.domain.model.User;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.AuthenticateUserCommand;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.AuthenticateUserUseCase;
@@ -31,7 +31,7 @@ public class AuthService implements RegisterUserUseCase, AuthenticateUserUseCase
   @Transactional
   public UUID registerUser(RegisterUserCommand command) {
     if (userRepository.existsByEmail(command.email())) {
-      throw new DomainException("Ya existe un usuario con este email");
+      throw new ConflictException("Ya existe un usuario con este email");
     }
 
     String hashedPassword = passwordEncoder.encode(command.rawPassword());

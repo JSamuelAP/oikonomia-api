@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.AuthenticationException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.ConflictException;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.NotFoundException;
 
@@ -69,9 +70,16 @@ public class GlobalExceptionHandler {
     return problem;
   }
 
+  @ExceptionHandler(ConflictException.class)
+  public ProblemDetail handleConflictException(ConflictException ex) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    problem.setTitle(BAD_REQUEST_TITLE);
+    return problem;
+  }
+
   @ExceptionHandler(DomainException.class)
   public ProblemDetail handleDomainException(DomainException ex) {
-    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problem.setTitle(BAD_REQUEST_TITLE);
     return problem;
   }
