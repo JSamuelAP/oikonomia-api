@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class CategoryLookupAdapter implements CategoryLookupPort {
+public class TransactionCategoryLookupAdapter implements CategoryLookupPort {
   private final GetCategoriesByIdsUseCase getCategoriesByIdsUseCase;
 
   @Override
