@@ -58,6 +58,7 @@ public class AuthService implements RegisterUserUseCase, AuthenticateUserUseCase
   }
 
   @Override
+  @Transactional
   public void logout(UUID userId) {
     // TODO: revocar todos los refresh tokens
   }

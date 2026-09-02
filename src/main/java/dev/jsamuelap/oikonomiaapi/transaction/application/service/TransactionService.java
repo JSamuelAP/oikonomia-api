@@ -42,6 +42,7 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
   }
 
   @Override
+  @Transactional(readOnly = true)
   public TransactionView getById(UUID transactionId, UUID userId) {
     Transaction transaction = transactionRepository.findByIdAndUser(transactionId, userId)
       .orElseThrow(() -> new TransactionNotFoundException(transactionId));

@@ -35,6 +35,7 @@ public class CategoryService
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Category getById(UUID categoryId, UUID userId) {
     return categoryRepository.findByIdAndUser(categoryId, userId)
       .orElseThrow(() -> new CategoryNotFoundException(categoryId));
@@ -48,6 +49,7 @@ public class CategoryService
   }
 
   @Override
+  @Transactional
   public UUID createCategory(CreateCategoryCommand command) {
     Category category = Category.create(command.userId(), command.name(), command.flowType());
     Category saved = categoryRepository.save(category);
