@@ -7,17 +7,20 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.AuthenticationException;
 import dev.jsamuelap.oikonomiaapi.shared.security.config.SecurityProperties;
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.JwtCookies;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.AuthenticateUserUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.AuthenticationResult;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.LogoutUseCase;
+import dev.jsamuelap.oikonomiaapi.user.domain.port.in.RefreshTokenUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.RegisterUserUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.out.TokenGeneratorPort;
 
@@ -31,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
   private final RegisterUserUseCase registerUserUseCase;
   private final AuthenticateUserUseCase authenticateUserUseCase;
+  private final RefreshTokenUseCase refreshTokenUseCase;
   private final LogoutUseCase logoutUseCase;
   private final UserRestMapper mapper;
   private final TokenGeneratorPort tokenGenerator;
@@ -46,6 +50,19 @@ public class AuthController {
   public ResponseEntity<LoginResponse> login(@Valid @RequestBody final AuthenticateUserRequest request) {
     AuthenticationResult result = authenticateUserUseCase.authenticate(mapper.toCommand(request));
 
+    ResponseCookie cookie = buildRefreshCookie(result.refreshToken(), tokenGenerator.refreshTokenTtl().toSeconds());
+
+    return ResponseEntity.ok().header("Set-Cookie", cookie.toString()).body(new LoginResponse(result.accessToken()));
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<LoginResponse> refresh(
+    @CookieValue(name = JwtCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
+    if (refreshTokenCookie == null) {
+      throw new AuthenticationException("No se encontró el refresh token");
+    }
+
+    AuthenticationResult result = refreshTokenUseCase.refresh(refreshTokenCookie);
     ResponseCookie cookie = buildRefreshCookie(result.refreshToken(), tokenGenerator.refreshTokenTtl().toSeconds());
 
     return ResponseEntity.ok().header("Set-Cookie", cookie.toString()).body(new LoginResponse(result.accessToken()));
