@@ -19,8 +19,10 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
   private final SecretKey secretKey;
 
+  private static final short MIN_SECRET_BYTES = 32;
+
   public JwtService(JwtProperties properties) {
-    secretKey = Keys.hmacShaKeyFor(properties.secret().getBytes(StandardCharsets.UTF_8));
+    secretKey = buildSecretKey(properties.secret());
   }
 
   public String generate(String subject, Map<String, Object> claims, Duration ttl) {
@@ -31,5 +33,20 @@ public class JwtService {
 
   public Claims parse(String token) {
     return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+  }
+
+  private static SecretKey buildSecretKey(String secret) {
+    if (secret == null || secret.isBlank()) {
+      throw new IllegalStateException("JWT_SECRET no está configurado");
+    }
+
+    byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+    if (secretBytes.length < MIN_SECRET_BYTES) {
+      throw new IllegalStateException(
+        "JWT_SECRET es demasiado corto (%d bytes). Se requieren al menos %d bytes (256 bits) para HS256"
+          .formatted(secretBytes.length, MIN_SECRET_BYTES));
+    }
+
+    return Keys.hmacShaKeyFor(secretBytes);
   }
 }
