@@ -1,7 +1,9 @@
 package dev.jsamuelap.oikonomiaapi.transaction.application.service;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
@@ -30,8 +33,13 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
 
   @Override
   @Transactional(readOnly = true)
-  public List<TransactionView> getAll(UUID userId) {
-    List<Transaction> transactions = transactionRepository.findByUser(userId);
+  public List<TransactionView> getAll(UUID userId, YearMonth yearMonth) {
+    YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
+    if (effectiveYearMonth.getYear() < 2025 || effectiveYearMonth.getYear() > 2100) {
+      throw new DomainException("El año debe ser entre 2025 y 2100");
+    }
+
+    List<Transaction> transactions = transactionRepository.findByUser(userId, effectiveYearMonth);
 
     Set<UUID> categoryIds = transactions.stream().map(Transaction::getCategoryId).collect(Collectors.toSet());
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds);

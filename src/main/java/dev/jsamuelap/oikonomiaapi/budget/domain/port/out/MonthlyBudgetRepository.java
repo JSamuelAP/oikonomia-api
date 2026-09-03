@@ -7,7 +7,7 @@ import java.util.UUID;
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 
 public interface MonthlyBudgetRepository {
-  List<MonthlyBudget> findAllByUser(UUID userId);
+  List<MonthlyBudget> findAllByUser(UUID userId, Short year);
 
   Optional<MonthlyBudget> findByIdAndUser(UUID id, UUID userId);
 

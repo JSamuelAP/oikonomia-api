@@ -18,8 +18,8 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
   private final MonthlyBudgetPersistenceMapper mapper;
 
   @Override
-  public List<MonthlyBudget> findAllByUser(UUID userId) {
-    return jpaRepository.findByUserIdAndDeletedAtIsNull(userId).stream().map(mapper::toDomain).toList();
+  public List<MonthlyBudget> findAllByUser(UUID userId, Short year) {
+    return jpaRepository.findByUserIdAndYearAndDeletedAtIsNull(userId, year).stream().map(mapper::toDomain).toList();
   }
 
   @Override

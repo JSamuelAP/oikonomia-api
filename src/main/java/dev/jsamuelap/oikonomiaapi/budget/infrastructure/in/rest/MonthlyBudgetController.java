@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCase;
@@ -34,8 +35,8 @@ public class MonthlyBudgetController {
 
   @GetMapping()
   public ResponseEntity<List<MonthlyBudgetResponse>> getAll(
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
-    List<MonthlyBudgetResponse> budgets = mapper.toResponse(listMonthlyBudgetUseCase.getAll(principal.userId()));
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal, @RequestParam(required = false) final Short year) {
+    List<MonthlyBudgetResponse> budgets = mapper.toResponse(listMonthlyBudgetUseCase.getAll(principal.userId(), year));
     return ResponseEntity.ok(budgets);
   }
 

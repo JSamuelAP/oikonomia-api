@@ -1,7 +1,9 @@
 package dev.jsamuelap.oikonomiaapi.budget.application.service;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,6 +21,7 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepository;
+import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,8 +37,13 @@ public class MonthlyBudgetService
 
   @Override
   @Transactional(readOnly = true)
-  public List<MonthlyBudgetView> getAll(UUID userId) {
-    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId);
+  public List<MonthlyBudgetView> getAll(UUID userId, Short year) {
+    Short effectiveYear = Objects.requireNonNullElse(year, (short) Year.now().getValue());
+    if (effectiveYear < 2025 || effectiveYear > 2100) {
+      throw new DomainException("El año debe ser entre 2025 y 2100");
+    }
+
+    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYear);
 
     Set<UUID> categoryIds = budgets.stream().map(MonthlyBudget::getCategoryId).collect(Collectors.toSet());
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds);

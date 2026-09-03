@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.out.persistence.jpa;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,8 +19,10 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
   private final TransactionPersistenceMapper mapper;
 
   @Override
-  public List<Transaction> findByUser(UUID userId) {
-    return jpaRepository.findByUserIdAndDeletedAtIsNull(userId).stream().map(mapper::toDomain).toList();
+  public List<Transaction> findByUser(UUID userId, YearMonth yearMonth) {
+    Short month = (short) yearMonth.getMonthValue();
+    Short year = (short) yearMonth.getYear();
+    return jpaRepository.findByUserIdAndMonthAndYear(userId, month, year).stream().map(mapper::toDomain).toList();
   }
 
   @Override

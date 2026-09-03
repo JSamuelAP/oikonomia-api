@@ -9,6 +9,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -52,6 +53,15 @@ public class GlobalExceptionHandler {
     problem.setTitle(BAD_REQUEST_TITLE);
     String message = String.format("El parámetro '%s' en la URL tiene un tipo de dato incorrecto o formato invalido",
       ex.getName());
+    problem.setDetail(message);
+    return problem;
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ProblemDetail handleMissingRequestParameterException(MissingServletRequestParameterException ex) {
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    problem.setTitle(BAD_REQUEST_TITLE);
+    String message = String.format("El parámetro '%s' es obligatorio", ex.getParameterName());
     problem.setDetail(message);
     return problem;
   }
