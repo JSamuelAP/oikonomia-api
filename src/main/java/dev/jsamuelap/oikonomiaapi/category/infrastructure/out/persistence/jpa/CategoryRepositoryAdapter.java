@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
   }
 
   @Override
-  public Optional<Category> findByIdAndUser(UUID id, UUID userId) {
-    return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDomain);
+  public Optional<CategoryDetail> findByIdAndUser(UUID id, UUID userId) {
+    return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDetail);
   }
 
   @Override

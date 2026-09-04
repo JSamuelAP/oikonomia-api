@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.category.domain.exception.CategoryNotFoundException;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryView;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CreateCategoryCommand;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CreateCategoryUseCase;
@@ -36,7 +37,7 @@ public class CategoryService
 
   @Override
   @Transactional(readOnly = true)
-  public Category getById(UUID categoryId, UUID userId) {
+  public CategoryDetail getById(UUID categoryId, UUID userId) {
     return categoryRepository.findByIdAndUser(categoryId, userId)
       .orElseThrow(() -> new CategoryNotFoundException(categoryId));
   }

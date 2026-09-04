@@ -3,6 +3,7 @@ package dev.jsamuelap.oikonomiaapi.category.infrastructure.out.persistence.jpa;
 import org.mapstruct.Mapper;
 
 import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 
 @Mapper(componentModel = "spring")
 public interface CategoryPersistenceMapper {
@@ -26,4 +27,6 @@ public interface CategoryPersistenceMapper {
     entity.setFlowType(category.getFlowType());
     return entity;
   }
+
+  CategoryDetail toDetail(CategoryJpaEntity entity);
 }

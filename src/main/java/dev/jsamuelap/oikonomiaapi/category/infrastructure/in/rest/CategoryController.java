@@ -39,9 +39,9 @@ public class CategoryController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<CategoryResponse> getById(@PathVariable UUID id,
+  public ResponseEntity<CategoryDetailResponse> getById(@PathVariable UUID id,
     @AuthenticationPrincipal AuthenticatedPrincipal principal) {
-    CategoryResponse category = mapper.toResponse(getCategoryUseCase.getById(id, principal.userId()));
+    CategoryDetailResponse category = mapper.toDetail(getCategoryUseCase.getById(id, principal.userId()));
     return ResponseEntity.ok(category);
   }
 
