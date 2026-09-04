@@ -7,12 +7,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.jsamuelap.oikonomiaapi.category.domain.exception.CategoryAlreadyExistsException;
 import dev.jsamuelap.oikonomiaapi.category.domain.exception.CategoryNotFoundException;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
+import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryView;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CreateCategoryCommand;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CreateCategoryUseCase;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.in.DeleteCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.GetCategoriesByIdsUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.GetCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.ListCategoriesUseCase;
@@ -27,7 +30,8 @@ public class CategoryService
     ListCategoriesUseCase,
     GetCategoryUseCase,
     GetCategoriesByIdsUseCase,
-    CreateCategoryUseCase {
+    CreateCategoryUseCase,
+    DeleteCategoryUseCase {
   private final CategoryRepository categoryRepository;
 
   @Override
@@ -38,7 +42,7 @@ public class CategoryService
   @Override
   @Transactional(readOnly = true)
   public CategoryDetail getById(UUID categoryId, UUID userId) {
-    return categoryRepository.findByIdAndUser(categoryId, userId)
+    return categoryRepository.findDetailByIdAndUser(categoryId, userId)
       .orElseThrow(() -> new CategoryNotFoundException(categoryId));
   }
 
@@ -52,8 +56,23 @@ public class CategoryService
   @Override
   @Transactional
   public UUID createCategory(CreateCategoryCommand command) {
+    if (categoryRepository.existsByNameAndFlowTypeAndUserId(command.name(), command.flowType(), command.userId())) {
+      String flowTypeLabel = command.flowType() == FlowType.EXPENSE ? "gasto" : "ingreso";
+      throw new CategoryAlreadyExistsException(command.name(), flowTypeLabel);
+    }
     Category category = Category.create(command.userId(), command.name(), command.flowType());
     Category saved = categoryRepository.save(category);
     return saved.getId();
+  }
+
+  @Override
+  @Transactional
+  public void deleteById(UUID id, UUID userId) {
+    Category category = categoryRepository.findByIdAndUser(id, userId)
+      .orElseThrow(() -> new CategoryNotFoundException(id));
+    if (!category.isDeleted()) {
+      category.delete();
+      categoryRepository.save(category);
+    }
   }
 }

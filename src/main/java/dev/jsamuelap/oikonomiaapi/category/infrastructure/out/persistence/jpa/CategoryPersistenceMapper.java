@@ -12,7 +12,8 @@ public interface CategoryPersistenceMapper {
       return null;
     }
 
-    return Category.reconstitute(entity.getId(), entity.getUserId(), entity.getName(), entity.getFlowType());
+    return Category.reconstitute(entity.getId(), entity.getUserId(), entity.getName(), entity.getFlowType(),
+      entity.getDeletedAt());
   }
 
   default CategoryJpaEntity toEntity(Category category) {
