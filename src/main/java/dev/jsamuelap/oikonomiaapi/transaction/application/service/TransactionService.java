@@ -18,9 +18,11 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCo
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategorySummary;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -51,15 +53,15 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
 
   @Override
   @Transactional(readOnly = true)
-  public TransactionView getById(UUID transactionId, UUID userId) {
-    Transaction transaction = transactionRepository.findByIdAndUser(transactionId, userId)
+  public TransactionDetailView getById(UUID transactionId, UUID userId) {
+    TransactionDetail transaction = transactionRepository.findByIdAndUser(transactionId, userId)
       .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
-    CategorySummary category = categoryLookupPort.findByIds(Set.of(transaction.getCategoryId()))
-      .get(transaction.getCategoryId());
+    CategorySummary category = categoryLookupPort.findByIds(Set.of(transaction.categoryId()))
+      .get(transaction.categoryId());
 
-    return new TransactionView(transaction.getId(), transaction.getAmount(), transaction.getDate(),
-      transaction.getNotes(), category);
+    return new TransactionDetailView(transaction.id(), transaction.amount(), transaction.date(), transaction.notes(),
+      category, transaction.createdAt(), transaction.updatedAt());
   }
 
   @Override

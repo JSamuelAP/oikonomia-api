@@ -45,9 +45,9 @@ public class TransactionController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<TransactionResponse> get(@AuthenticationPrincipal final AuthenticatedPrincipal principal,
+  public ResponseEntity<TransactionDetailResponse> get(@AuthenticationPrincipal final AuthenticatedPrincipal principal,
     @PathVariable final UUID id) {
-    TransactionResponse transaction = mapper.toResponse(getTransactionUseCase.getById(id, principal.userId()));
+    TransactionDetailResponse transaction = mapper.toResponse(getTransactionUseCase.getById(id, principal.userId()));
     return ResponseEntity.ok(transaction);
   }
 

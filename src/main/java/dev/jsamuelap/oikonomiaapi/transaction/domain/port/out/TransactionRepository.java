@@ -10,7 +10,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 public interface TransactionRepository {
   List<Transaction> findByUser(UUID userId, YearMonth yearMonth);
 
-  Optional<Transaction> findByIdAndUser(UUID transactionId, UUID userId);
+  Optional<TransactionDetail> findByIdAndUser(UUID transactionId, UUID userId);
 
   Transaction save(Transaction transaction);
 }

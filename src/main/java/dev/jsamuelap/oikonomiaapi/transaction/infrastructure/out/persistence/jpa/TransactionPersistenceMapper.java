@@ -1,8 +1,10 @@
 package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.out.persistence.jpa;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
 
 @Mapper(componentModel = "spring")
 public interface TransactionPersistenceMapper {
@@ -21,4 +23,7 @@ public interface TransactionPersistenceMapper {
     entity.setNotes(domain.getNotes());
     return entity;
   }
+
+  @Mapping(target = "date", source = "transactionDate")
+  TransactionDetail toDetail(TransactionJpaEntity entity);
 }
