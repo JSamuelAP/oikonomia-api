@@ -11,5 +11,7 @@ public interface MonthlyBudgetRepository {
 
   Optional<MonthlyBudget> findByIdAndUser(UUID id, UUID userId);
 
+  boolean existsByCategoryAndUserAndDate(UUID categoryId, UUID userId, Short month, Short year);
+
   MonthlyBudget save(MonthlyBudget budget);
 }

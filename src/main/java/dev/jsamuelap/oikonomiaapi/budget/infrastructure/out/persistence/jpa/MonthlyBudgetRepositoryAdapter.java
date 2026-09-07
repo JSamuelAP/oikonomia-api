@@ -28,6 +28,11 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
   }
 
   @Override
+  public boolean existsByCategoryAndUserAndDate(UUID categoryId, UUID userId, Short month, Short year) {
+    return jpaRepository.existsByCategoryIdAndUserIdAndMonthAndYearAndDeletedAtIsNull(categoryId, userId, month, year);
+  }
+
+  @Override
   public MonthlyBudget save(MonthlyBudget budget) {
     MonthlyBudgetJpaEntity entity = mapper.toEntity(budget);
     MonthlyBudgetJpaEntity saved = jpaRepository.save(entity);

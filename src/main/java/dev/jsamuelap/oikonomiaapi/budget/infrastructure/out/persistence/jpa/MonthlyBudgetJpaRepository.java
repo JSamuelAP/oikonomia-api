@@ -10,4 +10,7 @@ public interface MonthlyBudgetJpaRepository extends JpaRepository<MonthlyBudgetJ
   List<MonthlyBudgetJpaEntity> findByUserIdAndYearAndDeletedAtIsNull(UUID userId, Short year);
 
   Optional<MonthlyBudgetJpaEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+
+  boolean existsByCategoryIdAndUserIdAndMonthAndYearAndDeletedAtIsNull(UUID categoryId, UUID userId, Short month,
+    Short year);
 }

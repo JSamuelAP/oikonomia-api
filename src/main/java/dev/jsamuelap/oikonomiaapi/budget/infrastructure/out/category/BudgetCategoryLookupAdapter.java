@@ -20,8 +20,8 @@ public class BudgetCategoryLookupAdapter implements CategoryLookupPort {
   private final GetCategoriesByIdsUseCase getCategoriesByIdsUseCase;
 
   @Override
-  public Map<UUID, CategorySummary> findByIds(Set<UUID> categoryIds) {
-    return getCategoriesByIdsUseCase.getByIds(categoryIds).stream().collect(
-      Collectors.toMap(CategoryView::id, view -> new CategorySummary(view.id(), view.name(), view.flowType().name())));
+  public Map<UUID, CategorySummary> findByIds(Set<UUID> categoryIds, UUID userId) {
+    return getCategoriesByIdsUseCase.getByIds(categoryIds, userId).stream().collect(Collectors.toMap(CategoryView::id,
+      view -> new CategorySummary(view.id(), view.name(), view.flowType().name(), view.deleted())));
   }
 }
