@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
 
 @Mapper(componentModel = "spring")
 public interface MonthlyBudgetRestMapper {
@@ -15,4 +16,6 @@ public interface MonthlyBudgetRestMapper {
   MonthlyBudgetResponse toResponse(MonthlyBudgetView monthlyBudgets);
 
   CreateMonthlyBudgetCommand toCommand(CreateMonthlyBudgetRequest createMonthlyBudgetRequest, UUID userId);
+
+  UpdateMonthlyBudgetCommand toCommand(UpdateMonthlyBudgetRequest updateMonthlyBudgetRequest, UUID id, UUID userId);
 }

@@ -34,8 +34,17 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
 
   @Override
   public MonthlyBudget save(MonthlyBudget budget) {
-    MonthlyBudgetJpaEntity entity = mapper.toEntity(budget);
+    MonthlyBudgetJpaEntity entity = jpaRepository.findById(budget.getId())
+      .map(existing -> updateEntity(existing, budget)).orElseGet(() -> mapper.toEntity(budget));
     MonthlyBudgetJpaEntity saved = jpaRepository.save(entity);
     return mapper.toDomain(saved);
+  }
+
+  private MonthlyBudgetJpaEntity updateEntity(MonthlyBudgetJpaEntity entity, MonthlyBudget budget) {
+    entity.setCategoryId(budget.getCategoryId());
+    entity.setMonth(budget.getMonth());
+    entity.setYear(budget.getYear());
+    entity.setExpectedAmount(budget.getExpectedAmount());
+    return entity;
   }
 }

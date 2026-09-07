@@ -11,10 +11,10 @@ import lombok.Getter;
 public final class MonthlyBudget {
   private final UUID id;
   private final UUID userId;
-  private final UUID categoryId;
-  private final Short month;
-  private final Short year;
-  private final BigDecimal expectedAmount;
+  private UUID categoryId;
+  private Short month;
+  private Short year;
+  private BigDecimal expectedAmount;
 
   private MonthlyBudget(UUID id, UUID userId, UUID categoryId, Short month, Short year, BigDecimal expectedAmount) {
     this.id = id;
@@ -37,6 +37,26 @@ public final class MonthlyBudget {
   public static MonthlyBudget reconstitute(UUID id, UUID userId, UUID categoryId, Short month, Short year,
     BigDecimal expectedAmount) {
     return new MonthlyBudget(id, userId, categoryId, month, year, expectedAmount);
+  }
+
+  public void changeCategoryId(UUID categoryId) {
+    validateCategoryId(categoryId);
+    this.categoryId = categoryId;
+  }
+
+  public void changeMonth(Short month) {
+    validateMonth(month);
+    this.month = month;
+  }
+
+  public void changeYear(Short year) {
+    validateYear(year);
+    this.year = year;
+  }
+
+  public void changeExpectedAmount(BigDecimal expectedAmount) {
+    validateExpectedAmount(expectedAmount);
+    this.expectedAmount = expectedAmount;
   }
 
   private static void validateUserId(UUID userId) {

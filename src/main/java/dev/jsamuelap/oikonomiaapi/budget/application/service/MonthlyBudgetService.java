@@ -19,6 +19,8 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCa
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepository;
@@ -32,7 +34,8 @@ public class MonthlyBudgetService
   implements
     ListMonthlyBudgetUseCase,
     GetMonthlyBudgetUseCase,
-    CreateMonthlyBudgetUseCase {
+    CreateMonthlyBudgetUseCase,
+    UpdateMonthlyBudgetUseCase {
   private final MonthlyBudgetRepository monthlyBudgetRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -71,15 +74,36 @@ public class MonthlyBudgetService
   public UUID create(CreateMonthlyBudgetCommand command) {
     CategorySummary category = getCategory(command.categoryId(), command.userId());
 
-    if (monthlyBudgetRepository.existsByCategoryAndUserAndDate(command.categoryId(), command.userId(), command.month(),
-      command.year())) {
-      throw new MonthlyBudgetAlreadyExistsException(category.name(), command.month(), command.year());
-    }
+    validateMonthlyBudgetAlreadyExists(command.categoryId(), command.userId(), command.month(), command.year(),
+      category.name());
 
     MonthlyBudget monthlyBudget = MonthlyBudget.create(command.userId(), command.categoryId(), command.month(),
       command.year(), command.expectedAmount());
     MonthlyBudget saved = monthlyBudgetRepository.save(monthlyBudget);
     return saved.getId();
+  }
+
+  @Override
+  public void update(UpdateMonthlyBudgetCommand command) {
+    MonthlyBudget budget = monthlyBudgetRepository.findByIdAndUser(command.id(), command.userId())
+      .orElseThrow(() -> new MonthlyBudgetNotFoundException(command.id()));
+
+    CategorySummary category = getCategory(command.categoryId(), command.userId());
+
+    boolean categoryChanged = !budget.getCategoryId().equals(command.categoryId());
+    boolean monthChanged = !budget.getMonth().equals(command.month());
+    boolean yearChanged = !budget.getYear().equals(command.year());
+    if (categoryChanged || monthChanged || yearChanged) {
+      validateMonthlyBudgetAlreadyExists(command.categoryId(), command.userId(), command.month(), command.year(),
+        category.name());
+    }
+
+    budget.changeCategoryId(command.categoryId());
+    budget.changeMonth(command.month());
+    budget.changeYear(command.year());
+    budget.changeExpectedAmount(command.expectedAmount());
+
+    monthlyBudgetRepository.save(budget);
   }
 
   private CategorySummary getCategory(UUID categoryId, UUID userId) {
@@ -88,5 +112,12 @@ public class MonthlyBudgetService
       throw new DomainException("Categoría no encontrada");
     }
     return categories.get(categoryId);
+  }
+
+  private void validateMonthlyBudgetAlreadyExists(UUID categoryId, UUID userId, Short month, Short year,
+    String categoryName) {
+    if (monthlyBudgetRepository.existsByCategoryAndUserAndDate(categoryId, userId, month, year)) {
+      throw new MonthlyBudgetAlreadyExistsException(categoryName, month, year);
+    }
   }
 }
