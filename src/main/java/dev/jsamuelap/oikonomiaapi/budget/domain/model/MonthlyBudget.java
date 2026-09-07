@@ -1,6 +1,7 @@
 package dev.jsamuelap.oikonomiaapi.budget.domain.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
@@ -15,14 +16,17 @@ public final class MonthlyBudget {
   private Short month;
   private Short year;
   private BigDecimal expectedAmount;
+  private Instant deletedAt;
 
-  private MonthlyBudget(UUID id, UUID userId, UUID categoryId, Short month, Short year, BigDecimal expectedAmount) {
+  private MonthlyBudget(UUID id, UUID userId, UUID categoryId, Short month, Short year, BigDecimal expectedAmount,
+    Instant deletedAt) {
     this.id = id;
     this.userId = userId;
     this.categoryId = categoryId;
     this.month = month;
     this.year = year;
     this.expectedAmount = expectedAmount;
+    this.deletedAt = deletedAt;
   }
 
   public static MonthlyBudget create(UUID userId, UUID categoryId, Short month, Short year, BigDecimal expectedAmount) {
@@ -31,12 +35,23 @@ public final class MonthlyBudget {
     validateMonth(month);
     validateYear(year);
     validateExpectedAmount(expectedAmount);
-    return new MonthlyBudget(UUID.randomUUID(), userId, categoryId, month, year, expectedAmount);
+    return new MonthlyBudget(UUID.randomUUID(), userId, categoryId, month, year, expectedAmount, null);
   }
 
   public static MonthlyBudget reconstitute(UUID id, UUID userId, UUID categoryId, Short month, Short year,
-    BigDecimal expectedAmount) {
-    return new MonthlyBudget(id, userId, categoryId, month, year, expectedAmount);
+    BigDecimal expectedAmount, Instant deletedAt) {
+    return new MonthlyBudget(id, userId, categoryId, month, year, expectedAmount, deletedAt);
+  }
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
+  public void delete() {
+    if (isDeleted()) {
+      throw new DomainException("El presupuesto ya está eliminado");
+    }
+    this.deletedAt = Instant.now();
   }
 
   public void changeCategoryId(UUID categoryId) {

@@ -16,6 +16,7 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.exception.MonthlyBudgetNotFoundE
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.DeleteMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
@@ -35,7 +36,8 @@ public class MonthlyBudgetService
     ListMonthlyBudgetUseCase,
     GetMonthlyBudgetUseCase,
     CreateMonthlyBudgetUseCase,
-    UpdateMonthlyBudgetUseCase {
+    UpdateMonthlyBudgetUseCase,
+    DeleteMonthlyBudgetUseCase {
   private final MonthlyBudgetRepository monthlyBudgetRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -104,6 +106,17 @@ public class MonthlyBudgetService
     budget.changeExpectedAmount(command.expectedAmount());
 
     monthlyBudgetRepository.save(budget);
+  }
+
+  @Override
+  @Transactional
+  public void deleteById(UUID id, UUID userId) {
+    MonthlyBudget budget = monthlyBudgetRepository.findByIdAndUser(id, userId)
+      .orElseThrow(() -> new MonthlyBudgetNotFoundException(id));
+    if (!budget.isDeleted()) {
+      budget.delete();
+      monthlyBudgetRepository.save(budget);
+    }
   }
 
   private CategorySummary getCategory(UUID categoryId, UUID userId) {

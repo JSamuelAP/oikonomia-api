@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.DeleteMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetUseCase;
@@ -34,6 +36,7 @@ public class MonthlyBudgetController {
   private final GetMonthlyBudgetUseCase getMonthlyBudgetUseCase;
   private final CreateMonthlyBudgetUseCase createMonthlyBudgetUseCase;
   private final UpdateMonthlyBudgetUseCase updateMonthlyBudgetUseCase;
+  private final DeleteMonthlyBudgetUseCase deleteMonthlyBudgetUseCase;
   private final MonthlyBudgetRestMapper mapper;
 
   @GetMapping()
@@ -62,6 +65,13 @@ public class MonthlyBudgetController {
     @Valid @RequestBody final UpdateMonthlyBudgetRequest request,
     @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     updateMonthlyBudgetUseCase.update(mapper.toCommand(request, id, principal.userId()));
+    return ResponseEntity.noContent().build();
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(@PathVariable final UUID id,
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+    deleteMonthlyBudgetUseCase.deleteById(id, principal.userId());
     return ResponseEntity.noContent().build();
   }
 }

@@ -12,7 +12,7 @@ public interface MonthlyBudgetPersistenceMapper {
     }
 
     return MonthlyBudget.reconstitute(entity.getId(), entity.getUserId(), entity.getCategoryId(), entity.getMonth(),
-      entity.getYear(), entity.getExpectedAmount());
+      entity.getYear(), entity.getExpectedAmount(), entity.getDeletedAt());
   }
 
   default MonthlyBudgetJpaEntity toEntity(MonthlyBudget monthlyBudget) {
