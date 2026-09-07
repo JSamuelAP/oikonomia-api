@@ -4,5 +4,5 @@ import java.util.UUID;
 
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 
-public record CategoryView(UUID id, String name, FlowType flowType) {
+public record CategoryView(UUID id, String name, FlowType flowType, boolean deleted) {
 }

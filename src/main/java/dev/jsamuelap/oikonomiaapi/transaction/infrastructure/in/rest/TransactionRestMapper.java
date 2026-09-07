@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
 
 @Mapper(componentModel = "spring")
 public interface TransactionRestMapper {
@@ -18,4 +19,6 @@ public interface TransactionRestMapper {
   TransactionDetailResponse toResponse(TransactionDetailView transaction);
 
   CreateTransactionCommand toCommand(CreateTransactionRequest request, UUID userId);
+
+  UpdateTransactionCommand toCommand(UpdateTransactionRequest request, UUID id, UUID userId);
 }

@@ -16,7 +16,7 @@ public interface CategoryRepository {
 
   List<Category> findByUser(UUID userId);
 
-  List<Category> findAllById(Set<UUID> categoryIds);
+  List<Category> findByIdsAndUser(Set<UUID> categoryIds, UUID userId);
 
   Category save(Category category);
 

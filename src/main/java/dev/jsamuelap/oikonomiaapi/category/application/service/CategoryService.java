@@ -48,9 +48,9 @@ public class CategoryService
 
   @Override
   @Transactional(readOnly = true)
-  public List<CategoryView> getByIds(Set<UUID> categoryIds) {
-    return categoryRepository.findAllById(categoryIds).stream()
-      .map(c -> new CategoryView(c.getId(), c.getName(), c.getFlowType())).toList();
+  public List<CategoryView> getByIds(Set<UUID> categoryIds, UUID userId) {
+    return categoryRepository.findByIdsAndUser(categoryIds, userId).stream()
+      .map(c -> new CategoryView(c.getId(), c.getName(), c.getFlowType(), c.isDeleted())).toList();
   }
 
   @Override

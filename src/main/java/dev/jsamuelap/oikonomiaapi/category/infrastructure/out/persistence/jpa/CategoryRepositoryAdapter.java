@@ -31,8 +31,8 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
   }
 
   @Override
-  public List<Category> findAllById(Set<UUID> categoryIds) {
-    return jpaRepository.findAllById(categoryIds).stream().map(mapper::toDomain).toList();
+  public List<Category> findByIdsAndUser(Set<UUID> categoryIds, UUID userId) {
+    return jpaRepository.findByIdInAndUserId(categoryIds, userId).stream().map(mapper::toDomain).toList();
   }
 
   @Override

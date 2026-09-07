@@ -27,14 +27,28 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
   }
 
   @Override
-  public Optional<TransactionDetail> findByIdAndUser(UUID transactionId, UUID userId) {
+  public Optional<Transaction> findByIdAndUser(UUID id, UUID userId) {
+    return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDomain);
+  }
+
+  @Override
+  public Optional<TransactionDetail> findDetailByIdAndUser(UUID transactionId, UUID userId) {
     return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(transactionId, userId).map(mapper::toDetail);
   }
 
   @Override
   public Transaction save(Transaction transaction) {
-    TransactionJpaEntity entity = mapper.toEntity(transaction);
+    TransactionJpaEntity entity = jpaRepository.findById(transaction.getId())
+      .map(existing -> updateEntity(existing, transaction)).orElseGet(() -> mapper.toEntity(transaction));
     TransactionJpaEntity saved = jpaRepository.save(entity);
     return mapper.toDomain(saved);
+  }
+
+  private TransactionJpaEntity updateEntity(TransactionJpaEntity entity, Transaction transaction) {
+    entity.setCategoryId(transaction.getCategoryId());
+    entity.setAmount(transaction.getAmount());
+    entity.setTransactionDate(transaction.getDate());
+    entity.setNotes(transaction.getNotes());
+    return entity;
   }
 }

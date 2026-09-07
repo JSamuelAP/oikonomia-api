@@ -5,5 +5,5 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface CategoryLookupPort {
-  Map<UUID, CategorySummary> findByIds(Set<UUID> categoryIds);
+  Map<UUID, CategorySummary> findByIds(Set<UUID> categoryIds, UUID userId);
 }

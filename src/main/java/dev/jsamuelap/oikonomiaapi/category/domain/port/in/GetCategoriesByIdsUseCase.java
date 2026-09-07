@@ -5,5 +5,5 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface GetCategoriesByIdsUseCase {
-  List<CategoryView> getByIds(Set<UUID> categoryIds);
+  List<CategoryView> getByIds(Set<UUID> categoryIds, UUID userId);
 }

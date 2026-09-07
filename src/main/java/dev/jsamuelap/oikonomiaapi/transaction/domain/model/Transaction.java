@@ -12,10 +12,10 @@ import lombok.Getter;
 public final class Transaction {
   private final UUID id;
   private final UUID userId;
-  private final UUID categoryId;
-  private final BigDecimal amount;
-  private final LocalDate date;
-  private final String notes;
+  private UUID categoryId;
+  private BigDecimal amount;
+  private LocalDate date;
+  private String notes;
 
   private static final short MAX_NOTES_LENGTH = 255;
 
@@ -40,6 +40,26 @@ public final class Transaction {
   public static Transaction reconstitute(UUID id, UUID userId, UUID categoryId, BigDecimal amount, LocalDate date,
     String notes) {
     return new Transaction(id, userId, categoryId, amount, date, notes);
+  }
+
+  public void changeCategoryId(UUID categoryId) {
+    validateCategoryId(categoryId);
+    this.categoryId = categoryId;
+  }
+
+  public void changeAmount(BigDecimal amount) {
+    validateAmount(amount);
+    this.amount = amount;
+  }
+
+  public void changeDate(LocalDate date) {
+    validateDate(date);
+    this.date = date;
+  }
+
+  public void changeNotes(String notes) {
+    validateNotes(notes);
+    this.notes = notes;
   }
 
   private static void validateUserId(UUID userId) {

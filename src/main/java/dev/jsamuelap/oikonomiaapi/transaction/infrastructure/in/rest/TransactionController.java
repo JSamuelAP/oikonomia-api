@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUseCase;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class TransactionController {
   private final ListTransactionsUseCase listTransactionsUseCase;
   private final GetTransactionUseCase getTransactionUseCase;
   private final CreateTransactionUseCase createTransactionUseCase;
+  private final UpdateTransactionUseCase updateTransactionUseCase;
   private final TransactionRestMapper mapper;
 
   @GetMapping()
@@ -56,5 +59,13 @@ public class TransactionController {
     @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     UUID transactionId = createTransactionUseCase.create(mapper.toCommand(request, principal.userId()));
     return ResponseEntity.created(URI.create("/api/v1/transactions/" + transactionId)).build();
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<Void> update(@PathVariable final UUID id,
+    @Valid @RequestBody final UpdateTransactionRequest request,
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+    updateTransactionUseCase.update(mapper.toCommand(request, id, principal.userId()));
+    return ResponseEntity.noContent().build();
   }
 }

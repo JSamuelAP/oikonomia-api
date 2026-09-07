@@ -20,6 +20,8 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCa
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
@@ -29,7 +31,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionService implements ListTransactionsUseCase, GetTransactionUseCase, CreateTransactionUseCase {
+public class TransactionService
+  implements
+    ListTransactionsUseCase,
+    GetTransactionUseCase,
+    CreateTransactionUseCase,
+    UpdateTransactionUseCase {
   private final TransactionRepository transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -44,7 +51,7 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
     List<Transaction> transactions = transactionRepository.findByUser(userId, effectiveYearMonth);
 
     Set<UUID> categoryIds = transactions.stream().map(Transaction::getCategoryId).collect(Collectors.toSet());
-    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds);
+    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);
 
     return transactions.stream().map(
       t -> new TransactionView(t.getId(), t.getAmount(), t.getDate(), t.getNotes(), categories.get(t.getCategoryId())))
@@ -54,10 +61,10 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
   @Override
   @Transactional(readOnly = true)
   public TransactionDetailView getById(UUID transactionId, UUID userId) {
-    TransactionDetail transaction = transactionRepository.findByIdAndUser(transactionId, userId)
+    TransactionDetail transaction = transactionRepository.findDetailByIdAndUser(transactionId, userId)
       .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
-    CategorySummary category = categoryLookupPort.findByIds(Set.of(transaction.categoryId()))
+    CategorySummary category = categoryLookupPort.findByIds(Set.of(transaction.categoryId()), userId)
       .get(transaction.categoryId());
 
     return new TransactionDetailView(transaction.id(), transaction.amount(), transaction.date(), transaction.notes(),
@@ -67,9 +74,33 @@ public class TransactionService implements ListTransactionsUseCase, GetTransacti
   @Override
   @Transactional
   public UUID create(CreateTransactionCommand command) {
+    validateCategoryExists(command.userId(), command.categoryId());
     Transaction transaction = Transaction.create(command.userId(), command.categoryId(), command.amount(),
       command.date(), command.notes());
     Transaction saved = transactionRepository.save(transaction);
     return saved.getId();
+  }
+
+  @Override
+  @Transactional
+  public void update(UpdateTransactionCommand command) {
+    Transaction transaction = transactionRepository.findByIdAndUser(command.id(), command.userId())
+      .orElseThrow(() -> new TransactionNotFoundException(command.id()));
+
+    validateCategoryExists(command.userId(), command.categoryId());
+
+    transaction.changeCategoryId(command.categoryId());
+    transaction.changeAmount(command.amount());
+    transaction.changeDate(command.date());
+    transaction.changeNotes(command.notes());
+
+    transactionRepository.save(transaction);
+  }
+
+  private void validateCategoryExists(UUID userId, UUID categoryId) {
+    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(Set.of(categoryId), userId);
+    if (!categories.containsKey(categoryId) || categories.get(categoryId).deleted()) {
+      throw new DomainException("Categoría no encontrada");
+    }
   }
 }
