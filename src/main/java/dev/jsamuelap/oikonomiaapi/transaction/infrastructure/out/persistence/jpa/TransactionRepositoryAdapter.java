@@ -49,6 +49,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     entity.setAmount(transaction.getAmount());
     entity.setTransactionDate(transaction.getDate());
     entity.setNotes(transaction.getNotes());
+    entity.setDeletedAt(transaction.getDeletedAt());
     return entity;
   }
 }

@@ -16,6 +16,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFou
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
@@ -36,7 +37,8 @@ public class TransactionService
     ListTransactionsUseCase,
     GetTransactionUseCase,
     CreateTransactionUseCase,
-    UpdateTransactionUseCase {
+    UpdateTransactionUseCase,
+    DeleteTransactionUseCase {
   private final TransactionRepository transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -95,6 +97,16 @@ public class TransactionService
     transaction.changeNotes(command.notes());
 
     transactionRepository.save(transaction);
+  }
+
+  @Override
+  public void deleteById(UUID id, UUID userId) {
+    Transaction transaction = transactionRepository.findByIdAndUser(id, userId)
+      .orElseThrow(() -> new TransactionNotFoundException(id));
+    if (!transaction.isDeleted()) {
+      transaction.delete();
+      transactionRepository.save(transaction);
+    }
   }
 
   private void validateCategoryExists(UUID userId, UUID categoryId) {

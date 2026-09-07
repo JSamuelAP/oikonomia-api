@@ -10,7 +10,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
 public interface TransactionPersistenceMapper {
   default Transaction toDomain(TransactionJpaEntity entity) {
     return Transaction.reconstitute(entity.getId(), entity.getUserId(), entity.getCategoryId(), entity.getAmount(),
-      entity.getTransactionDate(), entity.getNotes());
+      entity.getTransactionDate(), entity.getNotes(), entity.getDeletedAt());
   }
 
   default TransactionJpaEntity toEntity(Transaction domain) {
@@ -21,6 +21,7 @@ public interface TransactionPersistenceMapper {
     entity.setAmount(domain.getAmount());
     entity.setTransactionDate(domain.getDate());
     entity.setNotes(domain.getNotes());
+    entity.setDeletedAt(domain.getDeletedAt());
     return entity;
   }
 

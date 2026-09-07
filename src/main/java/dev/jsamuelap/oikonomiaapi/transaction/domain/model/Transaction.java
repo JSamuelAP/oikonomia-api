@@ -1,6 +1,7 @@
 package dev.jsamuelap.oikonomiaapi.transaction.domain.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -16,16 +17,19 @@ public final class Transaction {
   private BigDecimal amount;
   private LocalDate date;
   private String notes;
+  private Instant deletedAt;
 
   private static final short MAX_NOTES_LENGTH = 255;
 
-  private Transaction(UUID id, UUID userId, UUID categoryId, BigDecimal amount, LocalDate date, String notes) {
+  private Transaction(UUID id, UUID userId, UUID categoryId, BigDecimal amount, LocalDate date, String notes,
+    Instant deletedAt) {
     this.id = id;
     this.userId = userId;
     this.categoryId = categoryId;
     this.amount = amount;
     this.date = date;
     this.notes = notes;
+    this.deletedAt = deletedAt;
   }
 
   public static Transaction create(UUID userId, UUID categoryId, BigDecimal amount, LocalDate date, String notes) {
@@ -34,12 +38,23 @@ public final class Transaction {
     validateAmount(amount);
     validateDate(date);
     validateNotes(notes);
-    return new Transaction(UUID.randomUUID(), userId, categoryId, amount, date, notes);
+    return new Transaction(UUID.randomUUID(), userId, categoryId, amount, date, notes, null);
   }
 
   public static Transaction reconstitute(UUID id, UUID userId, UUID categoryId, BigDecimal amount, LocalDate date,
-    String notes) {
-    return new Transaction(id, userId, categoryId, amount, date, notes);
+    String notes, Instant deletedAt) {
+    return new Transaction(id, userId, categoryId, amount, date, notes, deletedAt);
+  }
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
+  public void delete() {
+    if (isDeleted()) {
+      throw new DomainException("La transacción ya está eliminada");
+    }
+    this.deletedAt = Instant.now();
   }
 
   public void changeCategoryId(UUID categoryId) {

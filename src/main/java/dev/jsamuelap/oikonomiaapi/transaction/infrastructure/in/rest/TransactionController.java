@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUseCase;
@@ -36,6 +38,7 @@ public class TransactionController {
   private final GetTransactionUseCase getTransactionUseCase;
   private final CreateTransactionUseCase createTransactionUseCase;
   private final UpdateTransactionUseCase updateTransactionUseCase;
+  private final DeleteTransactionUseCase deleteTransactionUseCase;
   private final TransactionRestMapper mapper;
 
   @GetMapping()
@@ -66,6 +69,13 @@ public class TransactionController {
     @Valid @RequestBody final UpdateTransactionRequest request,
     @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     updateTransactionUseCase.update(mapper.toCommand(request, id, principal.userId()));
+    return ResponseEntity.noContent().build();
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(@PathVariable final UUID id,
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+    deleteTransactionUseCase.deleteById(id, principal.userId());
     return ResponseEntity.noContent().build();
   }
 }
