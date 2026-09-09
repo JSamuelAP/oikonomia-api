@@ -50,7 +50,7 @@ public class CategoryService
   @Transactional(readOnly = true)
   public List<CategoryView> getByIds(Set<UUID> categoryIds, UUID userId) {
     return categoryRepository.findByIdsAndUser(categoryIds, userId).stream()
-      .map(c -> new CategoryView(c.getId(), c.getName(), c.getFlowType(), c.isDeleted())).toList();
+      .map(c -> new CategoryView(c.getId(), c.getName(), c.getFlowType().name(), c.isDeleted())).toList();
   }
 
   @Override
