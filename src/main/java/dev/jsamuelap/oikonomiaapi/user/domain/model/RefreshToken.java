@@ -71,7 +71,10 @@ public final class RefreshToken {
   }
 
   private static void validateExpiresAt(Instant expiresAt) {
-    if (expiresAt == null || expiresAt.isBefore(Instant.now())) {
+    if (expiresAt == null) {
+      throw new DomainException("La fecha de expiración es requerida");
+    }
+    if (expiresAt.isBefore(Instant.now())) {
       throw new DomainException("La fecha de expiración del refresh token debe ser futura");
     }
   }

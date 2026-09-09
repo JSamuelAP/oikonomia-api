@@ -20,10 +20,10 @@ public final class User {
   // deletedAt si lo agrego porque tiene lógica de negocio
   private Instant deletedAt;
 
-  private static final short MAX_FIRSTNAME_LENGTH = 100;
-  private static final short MAX_LASTNAME_LENGTH = 150;
-  private static final short MAX_EMAIL_LENGTH = 320;
-  private static final short MAX_PASSWORD_HASH_LENGTH = 255;
+  static final short MAX_FIRSTNAME_LENGTH = 100;
+  static final short MAX_LASTNAME_LENGTH = 150;
+  static final short MAX_EMAIL_LENGTH = 320;
+  static final short MAX_PASSWORD_HASH_LENGTH = 255;
   private static final Pattern EMAIL_PATTERN = Pattern
     .compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
 
@@ -93,7 +93,7 @@ public final class User {
     }
 
     if (email.length() > MAX_EMAIL_LENGTH) {
-      throw new DomainException("El email no pueden exceder más de %s caracteres".formatted(MAX_EMAIL_LENGTH));
+      throw new DomainException("El email no puede exceder más de %s caracteres".formatted(MAX_EMAIL_LENGTH));
     }
 
     if (!EMAIL_PATTERN.matcher(email).matches()) {

@@ -18,6 +18,11 @@ public final class MonthlyBudget {
   private BigDecimal expectedAmount;
   private Instant deletedAt;
 
+  static final Short MIN_MONTH = 1;
+  static final Short MAX_MONTH = 12;
+  static final Short MIN_YEAR = 2025;
+  static final Short MAX_YEAR = 2100;
+
   private MonthlyBudget(UUID id, UUID userId, UUID categoryId, Short month, Short year, BigDecimal expectedAmount,
     Instant deletedAt) {
     this.id = id;
@@ -91,8 +96,8 @@ public final class MonthlyBudget {
       throw new DomainException("El mes no puede ser nulo");
     }
 
-    if (month < 1 || month > 12) {
-      throw new DomainException("El mes debe ser entre 1 y 12");
+    if (month < MIN_MONTH || month > MAX_MONTH) {
+      throw new DomainException("El mes debe ser entre %s y %s".formatted(MIN_MONTH, MAX_MONTH));
     }
   }
 
@@ -101,8 +106,8 @@ public final class MonthlyBudget {
       throw new DomainException("El año no puede ser nulo");
     }
 
-    if (year < 2025 || year > 2100) {
-      throw new DomainException("El año debe ser entre 2025 y 2100");
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+      throw new DomainException("El año debe ser entre %s y %s".formatted(MIN_YEAR, MAX_YEAR));
     }
   }
 

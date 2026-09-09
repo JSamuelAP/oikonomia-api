@@ -19,7 +19,7 @@ public final class Transaction {
   private String notes;
   private Instant deletedAt;
 
-  private static final short MAX_NOTES_LENGTH = 255;
+  static final short MAX_NOTES_LENGTH = 255;
 
   private Transaction(UUID id, UUID userId, UUID categoryId, BigDecimal amount, LocalDate date, String notes,
     Instant deletedAt) {

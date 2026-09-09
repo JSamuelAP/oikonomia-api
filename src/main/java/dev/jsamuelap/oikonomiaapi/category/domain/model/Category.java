@@ -15,8 +15,8 @@ public final class Category {
   private final FlowType flowType;
   private Instant deletedAt;
 
-  private static final short MIN_NAME_LENGTH = 2;
-  private static final short MAX_NAME_LENGTH = 50;
+  static final short MIN_NAME_LENGTH = 2;
+  static final short MAX_NAME_LENGTH = 50;
 
   private Category(UUID id, UUID userId, String name, FlowType flowType, Instant deletedAt) {
     this.id = id;
@@ -27,8 +27,22 @@ public final class Category {
   }
 
   public static Category create(UUID userId, String name, FlowType flowType) {
+    validateUserId(userId);
+    validateFlowType(flowType);
     validateName(name);
     return new Category(UUID.randomUUID(), userId, name, flowType, null);
+  }
+
+  private static void validateFlowType(FlowType flowType) {
+    if (flowType == null) {
+      throw new DomainException("El tipo de flujo no puede ser nulo");
+    }
+  }
+
+  private static void validateUserId(UUID userId) {
+    if (userId == null) {
+      throw new DomainException("debe estar asociado a un usuario");
+    }
   }
 
   public static Category reconstitute(UUID id, UUID userId, String name, FlowType flowType, Instant deletedAt) {

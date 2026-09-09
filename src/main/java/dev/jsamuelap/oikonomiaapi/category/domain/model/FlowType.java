@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum FlowType {
   INCOME, EXPENSE;
 
-  // En dominio no debería aceptarse @JsonCreator, pero se incluye porque aporta
-  // mucho valor al cliente y no afecta
-  // casi nada en la arquitectura
+  // En dominio no debería aceptarse @JsonCreator,
+  // pero se incluye porque aporta mucho valor al cliente y no afecta casi nada en
+  // la arquitectura
   @JsonCreator
   public static FlowType forValue(String value) {
     for (FlowType type : FlowType.values()) {
