@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.budget.infrastructure.out.persistence.jpa;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,8 +19,11 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
   private final MonthlyBudgetPersistenceMapper mapper;
 
   @Override
-  public List<MonthlyBudget> findAllByUser(UUID userId, Short year) {
-    return jpaRepository.findByUserIdAndYearAndDeletedAtIsNull(userId, year).stream().map(mapper::toDomain).toList();
+  public List<MonthlyBudget> findAllByUser(UUID userId, YearMonth yearMonth) {
+    Short month = (short) yearMonth.getMonthValue();
+    Short year = (short) yearMonth.getYear();
+    return jpaRepository.findByUserIdAndMonthAndYearAndDeletedAtIsNull(userId, month, year).stream()
+      .map(mapper::toDomain).toList();
   }
 
   @Override

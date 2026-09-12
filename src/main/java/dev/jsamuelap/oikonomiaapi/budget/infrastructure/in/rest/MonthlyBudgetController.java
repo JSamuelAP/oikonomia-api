@@ -1,9 +1,11 @@
 package dev.jsamuelap.oikonomiaapi.budget.infrastructure.in.rest;
 
 import java.net.URI;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -41,8 +43,10 @@ public class MonthlyBudgetController {
 
   @GetMapping()
   public ResponseEntity<List<MonthlyBudgetResponse>> getAll(
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal, @RequestParam(required = false) final Short year) {
-    List<MonthlyBudgetResponse> budgets = mapper.toResponse(listMonthlyBudgetUseCase.getAll(principal.userId(), year));
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal,
+    @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") final YearMonth yearMonth) {
+    List<MonthlyBudgetResponse> budgets = mapper
+      .toResponse(listMonthlyBudgetUseCase.getAll(principal.userId(), yearMonth));
     return ResponseEntity.ok(budgets);
   }
 

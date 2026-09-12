@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MonthlyBudgetJpaRepository extends JpaRepository<MonthlyBudgetJpaEntity, UUID> {
-  List<MonthlyBudgetJpaEntity> findByUserIdAndYearAndDeletedAtIsNull(UUID userId, Short year);
+  List<MonthlyBudgetJpaEntity> findByUserIdAndMonthAndYearAndDeletedAtIsNull(UUID userId, Short month, Short year);
 
   Optional<MonthlyBudgetJpaEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
 

@@ -1,6 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.budget.application.service;
 
-import java.time.Year;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,13 +43,13 @@ public class MonthlyBudgetService
 
   @Override
   @Transactional(readOnly = true)
-  public List<MonthlyBudgetView> getAll(UUID userId, Short year) {
-    Short effectiveYear = Objects.requireNonNullElse(year, (short) Year.now().getValue());
-    if (effectiveYear < 2025 || effectiveYear > 2100) {
+  public List<MonthlyBudgetView> getAll(UUID userId, YearMonth yearMonth) {
+    YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
+    if (effectiveYearMonth.getYear() < 2025 || effectiveYearMonth.getYear() > 2100) {
       throw new DomainException("El año debe ser entre 2025 y 2100");
     }
 
-    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYear);
+    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYearMonth);
 
     Set<UUID> categoryIds = budgets.stream().map(MonthlyBudget::getCategoryId).collect(Collectors.toSet());
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);

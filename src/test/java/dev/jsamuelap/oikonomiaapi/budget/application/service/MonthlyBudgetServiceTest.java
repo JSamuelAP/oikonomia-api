@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.Year;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +57,8 @@ class MonthlyBudgetServiceTest {
     @DisplayName("Should reject when year is invalid")
     @ValueSource(shorts = {-431, 0, 2024, 2101})
     void shouldRejectWhenYearIsInvalid(short invalidYear) {
-      assertThatThrownBy(() -> monthlyBudgetService.getAll(UUID.randomUUID(), invalidYear))
+      YearMonth invalidYearMonth = YearMonth.of(invalidYear, 9);
+      assertThatThrownBy(() -> monthlyBudgetService.getAll(UUID.randomUUID(), invalidYearMonth))
         .isInstanceOf(DomainException.class).hasMessageContaining("El año debe ser entre");
 
       verify(monthlyBudgetRepository, never()).findAllByUser(any(), any());
@@ -70,7 +71,7 @@ class MonthlyBudgetServiceTest {
       UUID userId = UUID.randomUUID();
       monthlyBudgetService.getAll(userId, null);
 
-      verify(monthlyBudgetRepository).findAllByUser(userId, (short) Year.now().getValue());
+      verify(monthlyBudgetRepository).findAllByUser(userId, YearMonth.now());
     }
 
     @Test
@@ -81,19 +82,20 @@ class MonthlyBudgetServiceTest {
       UUID categoryId = UUID.randomUUID();
       Short month = 9;
       Short year = 2026;
+      YearMonth yearMonth = YearMonth.of(year, month);
       BigDecimal amount = BigDecimal.TEN;
       MonthlyBudget budget = MonthlyBudget.reconstitute(id, userId, categoryId, month, year, amount, null);
-      when(monthlyBudgetRepository.findAllByUser(userId, year)).thenReturn(List.of(budget));
+      when(monthlyBudgetRepository.findAllByUser(userId, yearMonth)).thenReturn(List.of(budget));
 
       CategorySummary category = new CategorySummary(categoryId, "Groceries", "EXPENSE", false);
       when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of(categoryId, category));
 
       MonthlyBudgetView expected = new MonthlyBudgetView(id, userId, month, year, amount, category);
 
-      List<MonthlyBudgetView> budgets = monthlyBudgetService.getAll(userId, year);
+      List<MonthlyBudgetView> budgets = monthlyBudgetService.getAll(userId, yearMonth);
       assertThat(budgets).isEqualTo(List.of(expected));
 
-      verify(monthlyBudgetRepository).findAllByUser(userId, year);
+      verify(monthlyBudgetRepository).findAllByUser(userId, yearMonth);
       verify(categoryLookupPort).findByIds(Set.of(categoryId), userId);
     }
   }
