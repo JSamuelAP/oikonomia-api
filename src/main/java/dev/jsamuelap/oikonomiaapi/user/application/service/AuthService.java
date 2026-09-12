@@ -57,7 +57,7 @@ public class AuthService implements RegisterUserUseCase, AuthenticateUserUseCase
       .orElseThrow(() -> new AuthenticationException("Email o contraseña incorrectos"));
 
     if (!passwordEncoder.matches(command.rawPassword(), user.getPasswordHash())) {
-      throw new AuthenticationException("Incorrect password");
+      throw new AuthenticationException("Email o contraseña incorrectos");
     }
 
     String accessToken = tokenGenerator.generateAccessToken(user.getId(), user.getEmail());
