@@ -2,6 +2,7 @@ package dev.jsamuelap.oikonomiaapi.shared.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,7 +23,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationEntryPoint entryPoint)
     throws Exception {
-    return http.csrf(AbstractHttpConfigurer::disable)
+    return http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))
       .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/auth/logout").authenticated()

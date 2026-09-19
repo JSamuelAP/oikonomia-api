@@ -4,11 +4,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import dev.jsamuelap.oikonomiaapi.shared.security.config.CorsProperties;
 import dev.jsamuelap.oikonomiaapi.shared.security.config.SecurityProperties;
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.JwtProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({SecurityProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, SecurityProperties.class, JwtProperties.class})
 public class OikonomiaApiApplication {
 
   public static void main(String[] args) {
