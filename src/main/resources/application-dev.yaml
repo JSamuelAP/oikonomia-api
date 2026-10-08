@@ -10,3 +10,7 @@ app:
       - http://localhost:4200
   security:
     cookie-secure: false
+
+logging:
+  level:
+    org.springframework.security: DEBUG
