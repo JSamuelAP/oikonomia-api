@@ -24,6 +24,11 @@ import dev.jsamuelap.oikonomiaapi.user.domain.port.in.RefreshTokenUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.RegisterUserUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.out.TokenGeneratorPort;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Authentication", description = "User authentication endpoints")
 public class AuthController {
   private final RegisterUserUseCase registerUserUseCase;
   private final AuthenticateUserUseCase authenticateUserUseCase;
@@ -41,13 +47,23 @@ public class AuthController {
   private final SecurityProperties securityProperties;
 
   @PostMapping("/signup")
-  public ResponseEntity<RegisterUserResponse> signup(@Valid @RequestBody final RegisterUserRequest request) {
+  @Operation(summary = "Register a new user account", description = "Creates a new user account")
+  @ApiResponse(responseCode = "201", description = "User account registered successfully")
+  @ApiResponse(responseCode = "409", description = "User with this email already exists")
+  @SecurityRequirements
+  public ResponseEntity<RegisterUserResponse> signup(
+    @Parameter(description = "User account registration request", required = true) @Valid @RequestBody final RegisterUserRequest request) {
     UUID userId = registerUserUseCase.registerUser(mapper.toCommand(request));
     return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterUserResponse(userId));
   }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginResponse> login(@Valid @RequestBody final AuthenticateUserRequest request) {
+  @Operation(summary = "User login", description = "Authenticates a user and returns an access token with a refresh token cookie")
+  @ApiResponse(responseCode = "200", description = "Login successful")
+  @ApiResponse(responseCode = "401", description = "Invalid credentials")
+  @SecurityRequirements
+  public ResponseEntity<LoginResponse> login(
+    @Parameter(description = "User login credentials", required = true) @Valid @RequestBody final AuthenticateUserRequest request) {
     AuthenticationResult result = authenticateUserUseCase.authenticate(mapper.toCommand(request));
 
     ResponseCookie cookie = buildRefreshCookie(result.refreshToken(), tokenGenerator.refreshTokenTtl().toSeconds());
@@ -56,8 +72,12 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
+  @Operation(summary = "Refresh access token", description = "Refreshes the access token using the refresh token cookie")
+  @ApiResponse(responseCode = "200", description = "Token refreshed successfully")
+  @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+  @SecurityRequirements
   public ResponseEntity<LoginResponse> refresh(
-    @CookieValue(name = JwtCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
+    @Parameter(hidden = true) @CookieValue(name = JwtCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
     if (refreshTokenCookie == null) {
       throw new AuthenticationException("No se encontró el refresh token");
     }
@@ -69,7 +89,10 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<Void> logout(@AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+  @Operation(summary = "User logout", description = "Logs out the authenticated user and clears the refresh token cookie")
+  @ApiResponse(responseCode = "200", description = "Logout successful")
+  public ResponseEntity<Void> logout(
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     logoutUseCase.logout(principal.userId());
 
     ResponseCookie expiredCookie = buildRefreshCookie("", 0);

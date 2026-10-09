@@ -11,17 +11,25 @@ import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.GetUserUseCase;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.in.UserProfile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "User Profile", description = "Authenticated user profile endpoints")
 public class UserProfileController {
   private final GetUserUseCase getUserUseCase;
 
   @GetMapping("/me")
-  public ResponseEntity<UserProfile> me(@AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+  @Operation(summary = "Get authenticated user profile", description = "Retrieves the profile of the currently authenticated user")
+  @ApiResponse(responseCode = "200", description = "User profile retrieved successfully")
+  public ResponseEntity<UserProfile> me(
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     UserProfile user = getUserUseCase.get(principal.userId());
     return ResponseEntity.ok(user);
   }

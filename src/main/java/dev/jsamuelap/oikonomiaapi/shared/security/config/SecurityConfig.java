@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.shared.security.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -21,13 +22,22 @@ public class SecurityConfig {
   private final JwtService jwtService;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationEntryPoint entryPoint)
-    throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationEntryPoint entryPoint,
+    @Value("${springdoc.api-docs.enabled:true}") boolean apiDocsEnabled,
+    @Value("${springdoc.swagger-ui.enabled:true}") boolean swaggerUiEnabled) throws Exception {
     return http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))
-      .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/auth/logout").authenticated()
-        .requestMatchers("/api/v1/auth/**").permitAll().anyRequest().authenticated())
-      .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class).build();
+      .authorizeHttpRequests(authorize -> {
+        if (apiDocsEnabled) {
+          authorize.requestMatchers("/api-docs.yaml", "/api-docs/**").permitAll();
+        }
+        if (swaggerUiEnabled) {
+          authorize.requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll();
+        }
+
+        authorize.requestMatchers("/api/v1/auth/logout").authenticated().requestMatchers("/api/v1/auth/**").permitAll()
+          .anyRequest().authenticated();
+      }).addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class).build();
   }
 }

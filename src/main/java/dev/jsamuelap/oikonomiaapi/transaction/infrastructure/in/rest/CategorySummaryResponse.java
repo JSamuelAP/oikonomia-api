@@ -2,5 +2,12 @@ package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.in.rest;
 
 import java.util.UUID;
 
-public record CategorySummaryResponse(UUID id, String name, String flowType, boolean deleted) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Category summary in transaction response")
+public record CategorySummaryResponse(
+  @Schema(description = "Category unique identifier", example = "123e4567-e89b-12d3-a456-426614174000") UUID id,
+  @Schema(description = "Category name", example = "Groceries") String name,
+  @Schema(description = "Category flow type", example = "EXPENSE") String flowType,
+  @Schema(description = "Whether the category is deleted", example = "false") boolean deleted) {
 }

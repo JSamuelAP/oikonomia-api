@@ -26,6 +26,10 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCa
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUseCase;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/transactions")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Transactions", description = "Transaction management endpoints")
 public class TransactionController {
   private final ListTransactionsUseCase listTransactionsUseCase;
   private final GetTransactionUseCase getTransactionUseCase;
@@ -41,40 +46,65 @@ public class TransactionController {
   private final DeleteTransactionUseCase deleteTransactionUseCase;
   private final TransactionRestMapper mapper;
 
+  // spotless:off
   @GetMapping()
+  @Operation(
+    summary = "Get all transactions",
+    description = "Retrieves a list of transactions for the authenticated user, optionally filtered by year-month"
+  )
+  @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully")
   public ResponseEntity<List<TransactionResponse>> getAll(
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal,
-    @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") final YearMonth yearMonth) {
+    @Parameter(hidden = true)
+    @AuthenticationPrincipal
+    final AuthenticatedPrincipal principal,
+    @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01")
+    @RequestParam(required = false)
+    @DateTimeFormat(pattern = "yyyy-MM")
+    final YearMonth yearMonth
+  ) {
+    // spotless:on
     List<TransactionResponse> transactions = mapper
       .toResponse(listTransactionsUseCase.getAll(principal.userId(), yearMonth));
     return ResponseEntity.ok(transactions);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<TransactionDetailResponse> get(@AuthenticationPrincipal final AuthenticatedPrincipal principal,
-    @PathVariable final UUID id) {
+  @Operation(summary = "Get transaction by ID", description = "Retrieves detailed information for a specific transaction")
+  @ApiResponse(responseCode = "200", description = "Transaction retrieved successfully")
+  public ResponseEntity<TransactionDetailResponse> get(
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal,
+    @Parameter(description = "Transaction ID", required = true) @PathVariable final UUID id) {
     TransactionDetailResponse transaction = mapper.toResponse(getTransactionUseCase.getById(id, principal.userId()));
     return ResponseEntity.ok(transaction);
   }
 
   @PostMapping
-  public ResponseEntity<Void> create(@Valid @RequestBody final CreateTransactionRequest request,
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+  @Operation(summary = "Create a new transaction", description = "Creates a new transaction for the authenticated user")
+  @ApiResponse(responseCode = "201", description = "Transaction created successfully")
+  public ResponseEntity<Void> create(
+    @Parameter(description = "Transaction creation request", required = true) @Valid @RequestBody final CreateTransactionRequest request,
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     UUID transactionId = createTransactionUseCase.create(mapper.toCommand(request, principal.userId()));
     return ResponseEntity.created(URI.create("/api/v1/transactions/" + transactionId)).build();
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Void> update(@PathVariable final UUID id,
-    @Valid @RequestBody final UpdateTransactionRequest request,
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+  @Operation(summary = "Update a transaction", description = "Updates an existing transaction for the authenticated user")
+  @ApiResponse(responseCode = "204", description = "Transaction updated successfully")
+  public ResponseEntity<Void> update(
+    @Parameter(description = "Transaction ID", required = true) @PathVariable final UUID id,
+    @Parameter(description = "Transaction update request", required = true) @Valid @RequestBody final UpdateTransactionRequest request,
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     updateTransactionUseCase.update(mapper.toCommand(request, id, principal.userId()));
     return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final UUID id,
-    @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
+  @Operation(summary = "Delete a transaction", description = "Deletes a transaction by ID for the authenticated user")
+  @ApiResponse(responseCode = "204", description = "Transaction deleted successfully")
+  public ResponseEntity<Void> delete(
+    @Parameter(description = "Transaction ID", required = true) @PathVariable final UUID id,
+    @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     deleteTransactionUseCase.deleteById(id, principal.userId());
     return ResponseEntity.noContent().build();
   }

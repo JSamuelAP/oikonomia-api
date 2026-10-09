@@ -14,3 +14,9 @@ app:
 logging:
   level:
     org.springframework.security: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
