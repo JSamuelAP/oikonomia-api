@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.out.persistence.jpa;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
@@ -21,9 +22,10 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
 
   @Override
   public List<Transaction> findByUser(UUID userId, YearMonth yearMonth) {
-    Short month = (short) yearMonth.getMonthValue();
-    Short year = (short) yearMonth.getYear();
-    return jpaRepository.findByUserIdAndMonthAndYear(userId, month, year).stream().map(mapper::toDomain).toList();
+    LocalDate startOfMonth = yearMonth.atDay(1);
+    LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+    return jpaRepository.findActiveByUserIdAndDateRange(userId, startOfMonth, startOfNextMonth).stream()
+      .map(mapper::toDomain).toList();
   }
 
   @Override

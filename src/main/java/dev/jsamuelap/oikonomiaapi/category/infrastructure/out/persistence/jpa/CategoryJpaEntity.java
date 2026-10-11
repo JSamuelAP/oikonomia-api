@@ -44,7 +44,7 @@ public class CategoryJpaEntity implements Persistable<UUID> {
   private String name;
 
   @NotNull
-  @Column(name = "flow_type", nullable = false, columnDefinition = "transaction_type not null")
+  @Column(name = "flow_type", nullable = false, columnDefinition = "flow_type not null")
   @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Enumerated(EnumType.STRING)
   private FlowType flowType;

@@ -1,3 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
 app:
   jwt:
     secret: "test-secret-key-only-for-test-32-bytes-min-0123456789"
