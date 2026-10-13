@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
-import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepository;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class TransactionRepositoryAdapter implements TransactionRepository {
+public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
   private final TransactionJpaRepository jpaRepository;
   private final TransactionPersistenceMapper mapper;
 

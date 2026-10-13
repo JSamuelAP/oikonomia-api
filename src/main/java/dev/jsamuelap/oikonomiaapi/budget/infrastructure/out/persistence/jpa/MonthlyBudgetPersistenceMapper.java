@@ -27,6 +27,7 @@ public interface MonthlyBudgetPersistenceMapper {
     monthlyBudgetJpaEntity.setMonth(monthlyBudget.getMonth());
     monthlyBudgetJpaEntity.setYear(monthlyBudget.getYear());
     monthlyBudgetJpaEntity.setExpectedAmount(monthlyBudget.getExpectedAmount());
+    monthlyBudgetJpaEntity.setDeletedAt(monthlyBudget.getDeletedAt());
     return monthlyBudgetJpaEntity;
   }
 }

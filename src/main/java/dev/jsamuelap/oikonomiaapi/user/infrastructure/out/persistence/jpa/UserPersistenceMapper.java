@@ -26,6 +26,7 @@ public interface UserPersistenceMapper {
     entity.setLastName(domain.getLastName());
     entity.setEmail(domain.getEmail());
     entity.setPasswordHash(domain.getPasswordHash());
+    entity.setDeletedAt(domain.getDeletedAt());
     return entity;
   }
 }

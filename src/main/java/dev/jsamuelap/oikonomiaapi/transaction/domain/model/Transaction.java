@@ -90,6 +90,7 @@ public final class Transaction {
   }
 
   private static void validateAmount(BigDecimal amount) {
+    // TODO: validar escala y maximo
     if (amount == null) {
       throw new DomainException("La cantidad no puede ser nula");
     }

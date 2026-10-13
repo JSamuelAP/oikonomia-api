@@ -26,6 +26,7 @@ public interface CategoryPersistenceMapper {
     entity.setUserId(category.getUserId());
     entity.setName(category.getName());
     entity.setFlowType(category.getFlowType());
+    entity.setDeletedAt(category.getDeletedAt());
     return entity;
   }
 

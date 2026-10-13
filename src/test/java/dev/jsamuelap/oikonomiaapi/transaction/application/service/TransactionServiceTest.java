@@ -40,13 +40,13 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCo
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
-import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepository;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepositoryPort;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Transaction service")
 class TransactionServiceTest {
   @Mock
-  private TransactionRepository transactionRepository;
+  private TransactionRepositoryPort transactionRepository;
   @Mock
   private CategoryLookupPort categoryLookupPort;
 

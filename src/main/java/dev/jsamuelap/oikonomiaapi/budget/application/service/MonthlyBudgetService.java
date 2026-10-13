@@ -24,7 +24,7 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetComma
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
-import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepository;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class MonthlyBudgetService
     CreateMonthlyBudgetUseCase,
     UpdateMonthlyBudgetUseCase,
     DeleteMonthlyBudgetUseCase {
-  private final MonthlyBudgetRepository monthlyBudgetRepository;
+  private final MonthlyBudgetRepositoryPort monthlyBudgetRepository;
   private final CategoryLookupPort categoryLookupPort;
 
   @Override

@@ -9,7 +9,7 @@ import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 
-public interface CategoryRepository {
+public interface CategoryRepositoryPort {
   Optional<Category> findByIdAndUser(UUID id, UUID userId);
 
   Optional<CategoryDetail> findDetailByIdAndUser(UUID id, UUID userId);

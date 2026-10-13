@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
-import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepository;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class CategoryRepositoryAdapter implements CategoryRepository {
+public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
   private final CategoryJpaRepository jpaRepository;
   private final CategoryPersistenceMapper mapper;
 

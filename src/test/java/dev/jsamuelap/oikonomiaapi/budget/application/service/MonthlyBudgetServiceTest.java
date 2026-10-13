@@ -36,14 +36,14 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
-import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepository;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Monthly budget service")
 class MonthlyBudgetServiceTest {
   @Mock
-  private MonthlyBudgetRepository monthlyBudgetRepository;
+  private MonthlyBudgetRepositoryPort monthlyBudgetRepository;
   @Mock
   private CategoryLookupPort categoryLookupPort;
 

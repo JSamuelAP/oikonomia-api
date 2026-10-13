@@ -29,13 +29,13 @@ import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryView;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CreateCategoryCommand;
-import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepository;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepositoryPort;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Category service")
 class CategoryServiceTest {
   @Mock
-  private CategoryRepository categoryRepository;
+  private CategoryRepositoryPort categoryRepository;
 
   @InjectMocks
   private CategoryService categoryService;

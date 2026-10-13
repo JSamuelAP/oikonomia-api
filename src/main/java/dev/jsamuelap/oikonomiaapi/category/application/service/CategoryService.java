@@ -19,7 +19,7 @@ import dev.jsamuelap.oikonomiaapi.category.domain.port.in.DeleteCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.GetCategoriesByIdsUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.GetCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.ListCategoriesUseCase;
-import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepository;
+import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +32,7 @@ public class CategoryService
     GetCategoriesByIdsUseCase,
     CreateCategoryUseCase,
     DeleteCategoryUseCase {
-  private final CategoryRepository categoryRepository;
+  private final CategoryRepositoryPort categoryRepository;
 
   @Override
   public List<Category> getAll(UUID userId) {

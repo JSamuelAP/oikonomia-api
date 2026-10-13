@@ -8,13 +8,13 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
-import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepository;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
+public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepositoryPort {
   private final MonthlyBudgetJpaRepository jpaRepository;
   private final MonthlyBudgetPersistenceMapper mapper;
 
@@ -49,6 +49,7 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepository {
     entity.setMonth(budget.getMonth());
     entity.setYear(budget.getYear());
     entity.setExpectedAmount(budget.getExpectedAmount());
+    entity.setDeletedAt(budget.getDeletedAt());
     return entity;
   }
 }

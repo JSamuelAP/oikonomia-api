@@ -28,7 +28,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
 
   @Override
   public User save(User user) {
-    UserJpaEntity entity = mapper.toEntity(user);
+    UserJpaEntity entity = jpaRepository.findById(user.getId()).map(existing -> updateEntity(existing, user))
+      .orElseGet(() -> mapper.toEntity(user));
+
     UserJpaEntity saved = jpaRepository.save(entity);
     return mapper.toDomain(saved);
   }
@@ -36,5 +38,14 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
   @Override
   public boolean existsByEmail(String email) {
     return jpaRepository.existsByEmail(email);
+  }
+
+  private UserJpaEntity updateEntity(UserJpaEntity entity, User user) {
+    entity.setFirstName(user.getFirstName());
+    entity.setLastName(user.getLastName());
+    entity.setEmail(user.getEmail());
+    entity.setPasswordHash(user.getPasswordHash());
+    entity.setDeletedAt(user.getDeletedAt());
+    return entity;
   }
 }

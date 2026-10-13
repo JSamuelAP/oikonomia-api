@@ -26,7 +26,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUs
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
-import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepository;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,7 +39,7 @@ public class TransactionService
     CreateTransactionUseCase,
     UpdateTransactionUseCase,
     DeleteTransactionUseCase {
-  private final TransactionRepository transactionRepository;
+  private final TransactionRepositoryPort transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
   @Override
