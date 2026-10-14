@@ -94,11 +94,27 @@ public class MonthlyBudgetRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
-    @DisplayName("Should accept smallest positive amount")
-    void shouldAcceptSmallestPositiveAmount() {
+    @DisplayName("Should persist smallest positive amount")
+    void shouldPersistSmallestPositiveAmount() {
       MonthlyBudget budget = budgetFor((short) 10, (short) 2026, "0.01");
 
       assertThatCode(() -> budgetRepository.save(budget)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("Should persist maximum amount")
+    void shouldPersistMaximumAmount() {
+      MonthlyBudget budget = budgetFor((short) 10, (short) 2026, "9999999999.99");
+
+      assertThatCode(() -> budgetRepository.save(budget)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("Should reject amount that overflows the column")
+    void shouldRejectAmountThatOverflowsTheColumn() {
+      MonthlyBudget budget = budgetFor((short) 10, (short) 2026, "10000000000.00");
+
+      assertThatThrownBy(() -> budgetRepository.save(budget)).isInstanceOf(DataIntegrityViolationException.class);
     }
   }
 

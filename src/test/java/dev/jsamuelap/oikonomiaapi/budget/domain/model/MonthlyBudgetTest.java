@@ -148,31 +148,18 @@ public class MonthlyBudgetTest {
     @DisplayName("Expected amount validation")
     class ExpectedAmount {
       @Test
-      @DisplayName("Should reject null expected amount")
-      void shouldRejectNullExpectedAmount() {
-        assertThatThrownBy(() -> MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR, null))
-          .isInstanceOf(DomainException.class).hasMessageContaining("no puede ser nula");
-      }
-
-      @Test
-      @DisplayName("Should reject zero expected amount")
-      void shouldRejectZeroExpectedAmount() {
+      @DisplayName("Should reject invalid expected amount")
+      void shouldRejectInvalidExpectedAmount() {
+        BigDecimal amount = new BigDecimal("10.555");
         assertThatThrownBy(
-          () -> MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR, BigDecimal.ZERO))
-          .isInstanceOf(DomainException.class).hasMessageContaining("debe ser mayor a 0");
+          () -> MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR, amount))
+          .isInstanceOf(DomainException.class).hasMessageContaining("decimales");
       }
 
       @Test
-      @DisplayName("Should reject negative expected amount")
-      void shouldRejectNegativeExpectedAmount() {
-        assertThatThrownBy(() -> MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR,
-          new BigDecimal("-10.00"))).isInstanceOf(DomainException.class).hasMessageContaining("debe ser mayor a 0");
-      }
-
-      @Test
-      @DisplayName("Should accept positive expected amount")
-      void shouldAcceptPositiveExpectedAmount() {
-        BigDecimal amount = new BigDecimal("0.01");
+      @DisplayName("Should accept valid expected amount")
+      void shouldAcceptValidExpectedAmount() {
+        BigDecimal amount = new BigDecimal("9999999999.99");
         MonthlyBudget budget = MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR, amount);
         assertThat(budget.getExpectedAmount()).isEqualTo(amount);
       }
@@ -345,8 +332,8 @@ public class MonthlyBudgetTest {
         MonthlyBudget budget = MonthlyBudget.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_MONTH, VALID_YEAR,
           VALID_AMOUNT);
 
-        assertThatThrownBy(() -> budget.changeExpectedAmount(null)).isInstanceOf(DomainException.class)
-          .hasMessageContaining("no puede ser nula");
+        assertThatThrownBy(() -> budget.changeExpectedAmount(new BigDecimal("10.555")))
+          .isInstanceOf(DomainException.class).hasMessageContaining("decimales");
       }
     }
   }

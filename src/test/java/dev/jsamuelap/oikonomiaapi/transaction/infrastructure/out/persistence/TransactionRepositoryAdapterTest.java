@@ -29,13 +29,16 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepositoryPort;
 
+@DisplayName("Transaction repository adapter")
 public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
   @Autowired
   private TransactionRepositoryPort transactionRepository;
 
   @Nested
+  @DisplayName("Save transaction")
   class Save {
     @Test
+    @DisplayName("Should persist all fields")
     void shouldPersistAllFields() {
       UUID userId = insertUser();
       UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
@@ -48,6 +51,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @ParameterizedTest
+    @DisplayName("Should reject invalid amount")
     @ValueSource(strings = {"-200.00", "-0.01", "0.00"})
     void shouldRejectInvalidAmount(String amount) {
       UUID userId = insertUser();
@@ -60,19 +64,45 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
-    void shouldAcceptSmallestPositiveAmount() {
+    @DisplayName("Should persist smallest positive amount")
+    void shouldPersistSmallestPositiveAmount() {
       UUID userId = insertUser();
       UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
-      Transaction transaction = Transaction.reconstitute(UUID.randomUUID(), userId, categoryId, new BigDecimal("0.01"),
-        LocalDate.of(2026, 10, 12), "", null);
+      Transaction transaction = Transaction.create(userId, categoryId, new BigDecimal("0.01"),
+        LocalDate.of(2026, 10, 12), "");
 
       assertThatCode(() -> transactionRepository.save(transaction)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("Should persist maximum amount")
+    void shouldPersistMaximumAmount() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      Transaction transaction = Transaction.create(userId, categoryId, new BigDecimal("9999999999.99"),
+        LocalDate.of(2026, 10, 12), "");
+
+      assertThatCode(() -> transactionRepository.save(transaction)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("Should reject amount that overflows the column")
+    void shouldRejectAmountThatOverflowsTheColumn() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      Transaction transaction = Transaction.reconstitute(UUID.randomUUID(), userId, categoryId,
+        new BigDecimal("10000000000.00"), LocalDate.of(2026, 10, 12), "", null);
+
+      assertThatThrownBy(() -> transactionRepository.save(transaction))
+        .isInstanceOf(DataIntegrityViolationException.class);
     }
   }
 
   @Nested
+  @DisplayName("Update transaction")
   class Update {
     @Test
+    @DisplayName("Should persist every mutable field")
     void shouldPersistEveryMutableField() {
       UUID userId = insertUser();
       UUID originalCategory = insertCategory(userId, "Groceries", FlowType.EXPENSE);
@@ -91,8 +121,10 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
   }
 
   @Nested
+  @DisplayName("Soft delete transaction")
   class SoftDelete {
     @Test
+    @DisplayName("Should persist deleted at when inserted already deleted")
     void shouldPersistDeletedAtWhenInsertedAlreadyDeleted() {
       UUID userId = insertUser();
       UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
@@ -107,6 +139,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should persist deletion of an existing transaction")
     void shouldPersistDeletionOfAnExistingTransaction() {
       Transaction deleted = deleteTransaction(insertUser(), FlowType.EXPENSE);
 
@@ -117,10 +150,12 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
   }
 
   @Nested
+  @DisplayName("Find by user and month")
   class FindByUserAndMonth {
     private static final YearMonth MARCH = YearMonth.of(2025, 3);
 
     @Test
+    @DisplayName("Should return only active of the user")
     void shouldReturnOnlyActiveOfTheUser() {
       UUID userId = insertUser();
       Transaction transaction = newTransaction(userId, FlowType.EXPENSE);
@@ -132,6 +167,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should include boundary days and exclude adjacent ones")
     void shouldIncludeBoundaryDaysAndExcludeAdjacentOnes() {
       UUID userId = insertUser();
       UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
@@ -145,6 +181,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @ParameterizedTest
+    @DisplayName("Should handle year rollover and leap year")
     @CsvSource({"2025-12, 2025-12-31, 2026-01-01", "2024-02, 2024-02-29, 2024-03-01"})
     void shouldHandleYearRolloverAndLeapYear(YearMonth month, LocalDate lastDay, LocalDate nextDay) {
       UUID userId = insertUser();
@@ -157,6 +194,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should return empty when month has not transactions")
     void shouldReturnEmptyWhenMonthHasNotTransactions() {
       UUID userId = insertUser();
       newTransaction(userId, FlowType.EXPENSE);
@@ -181,8 +219,10 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
   }
 
   @Nested
+  @DisplayName("Find by ID and user")
   class FindByIdAndUser {
     @Test
+    @DisplayName("Should not find transaction of another user")
     void shouldNotFindTransactionOfAnotherUser() {
       Transaction transaction = newTransaction(insertUser(), FlowType.EXPENSE);
 
@@ -191,8 +231,10 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
   }
 
   @Nested
+  @DisplayName("Find detail by ID and user")
   class FindDetailByIdAndUser {
     @Test
+    @DisplayName("Should return audit timestamps")
     void shouldReturnAuditTimestamps() {
       UUID userId = insertUser();
       Transaction transaction = newTransaction(userId, FlowType.EXPENSE);
@@ -205,6 +247,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should return all fields")
     void shouldReturnAllFields() {
       UUID userId = insertUser();
       UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
@@ -221,6 +264,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should not return detail of another user")
     void shouldNotReturnDetailOfAnotherUser() {
       Transaction transaction = newTransaction(insertUser(), FlowType.EXPENSE);
 
@@ -228,6 +272,7 @@ public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
     }
 
     @Test
+    @DisplayName("Should not return deleted transaction")
     void shouldNotReturnDeletedTransaction() {
       UUID userId = insertUser();
       Transaction deleted = deleteTransaction(userId, FlowType.EXPENSE);

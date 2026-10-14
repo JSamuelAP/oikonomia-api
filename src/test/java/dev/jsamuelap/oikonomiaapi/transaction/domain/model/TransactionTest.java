@@ -70,32 +70,17 @@ public class TransactionTest {
     @DisplayName("Amount validation")
     class Amount {
       @Test
-      @DisplayName("Should reject null amount")
-      void shouldRejectNullAmount() {
-        assertThatThrownBy(() -> Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, null, VALID_DATE, VALID_NOTES))
-          .isInstanceOf(DomainException.class).hasMessageContaining("no puede ser nula");
+      @DisplayName("Should reject invalid amount")
+      void shouldRejectInvalidAmount() {
+        BigDecimal amount = new BigDecimal("10.555");
+        assertThatThrownBy(() -> Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, amount, VALID_DATE, VALID_NOTES))
+          .isInstanceOf(DomainException.class).hasMessageContaining("decimales");
       }
 
       @Test
-      @DisplayName("Should reject zero amount")
-      void shouldRejectZeroAmount() {
-        assertThatThrownBy(
-          () -> Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, BigDecimal.ZERO, VALID_DATE, VALID_NOTES))
-          .isInstanceOf(DomainException.class).hasMessageContaining("debe ser mayor a 0");
-      }
-
-      @Test
-      @DisplayName("Should reject negative amount")
-      void shouldRejectNegativeAmount() {
-        assertThatThrownBy(
-          () -> Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, new BigDecimal("-10.00"), VALID_DATE, VALID_NOTES))
-          .isInstanceOf(DomainException.class).hasMessageContaining("debe ser mayor a 0");
-      }
-
-      @Test
-      @DisplayName("Should accept positive amount")
-      void shouldAcceptPositiveAmount() {
-        BigDecimal amount = new BigDecimal("0.01");
+      @DisplayName("Should accept valid amount")
+      void shouldAcceptValidAmount() {
+        BigDecimal amount = new BigDecimal("9999999999.99");
         Transaction transaction = Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, amount, VALID_DATE, VALID_NOTES);
         assertThat(transaction.getAmount()).isEqualTo(amount);
       }
@@ -295,8 +280,8 @@ public class TransactionTest {
         Transaction transaction = Transaction.create(VALID_USER_ID, VALID_CATEGORY_ID, VALID_AMOUNT, VALID_DATE,
           VALID_NOTES);
 
-        assertThatThrownBy(() -> transaction.changeAmount(null)).isInstanceOf(DomainException.class)
-          .hasMessageContaining("no puede ser nula");
+        assertThatThrownBy(() -> transaction.changeAmount(new BigDecimal("10.555"))).isInstanceOf(DomainException.class)
+          .hasMessageContaining("decimales");
       }
     }
 

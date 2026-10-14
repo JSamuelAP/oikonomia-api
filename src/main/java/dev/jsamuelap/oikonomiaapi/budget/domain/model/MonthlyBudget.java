@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 
 import lombok.Getter;
 
@@ -112,12 +113,6 @@ public final class MonthlyBudget {
   }
 
   private static void validateExpectedAmount(BigDecimal amount) {
-    if (amount == null) {
-      throw new DomainException("La cantidad presupuestada no puede ser nula");
-    }
-
-    if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new DomainException("La cantidad presupuestada debe ser mayor a 0");
-    }
+    MoneyRules.requireValidAmount(amount, "La cantidad presupuestada");
   }
 }
