@@ -24,13 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
-import dev.jsamuelap.oikonomiaapi.support.PersistenceTestSupport;
+import dev.jsamuelap.oikonomiaapi.support.IntegrationTestSupport;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionDetail;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.out.TransactionRepositoryPort;
 
 @DisplayName("Transaction repository adapter")
-public class TransactionRepositoryAdapterTest extends PersistenceTestSupport {
+public class TransactionRepositoryAdapterTest extends IntegrationTestSupport {
   @Autowired
   private TransactionRepositoryPort transactionRepository;
 

@@ -68,7 +68,7 @@ public class AuthService implements RegisterUserUseCase, AuthenticateUserUseCase
   }
 
   @Override
-  @Transactional
+  @Transactional(noRollbackFor = AuthenticationException.class)
   public AuthenticationResult refresh(String rawRefreshToken) {
     String presentedHash = tokenHasher.hash(rawRefreshToken);
 

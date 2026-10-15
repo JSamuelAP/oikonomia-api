@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import dev.jsamuelap.oikonomiaapi.support.PersistenceTestSupport;
+import dev.jsamuelap.oikonomiaapi.support.IntegrationTestSupport;
 import dev.jsamuelap.oikonomiaapi.user.domain.model.User;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.out.UserRepositoryPort;
 
 @DisplayName("User repository adapter")
-public class UserRepositoryAdapterTest extends PersistenceTestSupport {
+public class UserRepositoryAdapterTest extends IntegrationTestSupport {
   @Autowired
   private UserRepositoryPort userRepository;
 

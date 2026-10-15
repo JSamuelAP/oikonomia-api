@@ -16,12 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import dev.jsamuelap.oikonomiaapi.support.PersistenceTestSupport;
+import dev.jsamuelap.oikonomiaapi.support.IntegrationTestSupport;
 import dev.jsamuelap.oikonomiaapi.user.domain.model.RefreshToken;
 import dev.jsamuelap.oikonomiaapi.user.domain.port.out.RefreshTokenRepositoryPort;
 
 @DisplayName("Refresh token repository adapter")
-public class RefreshTokenRepositoryAdapterTest extends PersistenceTestSupport {
+public class RefreshTokenRepositoryAdapterTest extends IntegrationTestSupport {
   @Autowired
   private RefreshTokenRepositoryPort refreshTokenRepository;
 

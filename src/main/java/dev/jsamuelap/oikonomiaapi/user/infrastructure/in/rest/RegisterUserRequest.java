@@ -31,7 +31,7 @@ public record RegisterUserRequest(
   @Size(min = 8, max = 100, message = "La contraseña debe tener entre {min} y {max} caracteres de longitud")
   @Pattern(
     regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$",
-    message = "La contraseña debe tener un digito, una letra minúscula, una letra mayúscula y un caracter especial"
+    message = "La contraseña debe tener al menos un digito, una letra minúscula, una letra mayúscula y un caracter especial"
   )
   @Schema(description = "User password (min 8 chars, must contain digit, lowercase, uppercase, special char)", example = "Password123!")
   String password

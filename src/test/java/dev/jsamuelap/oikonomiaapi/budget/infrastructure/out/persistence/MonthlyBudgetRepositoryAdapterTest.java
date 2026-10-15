@@ -25,10 +25,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
-import dev.jsamuelap.oikonomiaapi.support.PersistenceTestSupport;
+import dev.jsamuelap.oikonomiaapi.support.IntegrationTestSupport;
 
 @DisplayName("Monthly budget repository adapter")
-public class MonthlyBudgetRepositoryAdapterTest extends PersistenceTestSupport {
+public class MonthlyBudgetRepositoryAdapterTest extends IntegrationTestSupport {
   @Autowired
   private MonthlyBudgetRepositoryPort budgetRepository;
 

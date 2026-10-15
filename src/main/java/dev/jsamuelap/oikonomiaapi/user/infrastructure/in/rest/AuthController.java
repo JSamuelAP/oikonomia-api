@@ -90,14 +90,14 @@ public class AuthController {
 
   @PostMapping("/logout")
   @Operation(summary = "User logout", description = "Logs out the authenticated user and clears the refresh token cookie")
-  @ApiResponse(responseCode = "200", description = "Logout successful")
+  @ApiResponse(responseCode = "204", description = "Logout successful")
   public ResponseEntity<Void> logout(
     @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     logoutUseCase.logout(principal.userId());
 
     ResponseCookie expiredCookie = buildRefreshCookie("", 0);
 
-    return ResponseEntity.ok().header("Set-Cookie", expiredCookie.toString()).build();
+    return ResponseEntity.noContent().header("Set-Cookie", expiredCookie.toString()).build();
   }
 
   private ResponseCookie buildRefreshCookie(String value, long maxAgeSeconds) {

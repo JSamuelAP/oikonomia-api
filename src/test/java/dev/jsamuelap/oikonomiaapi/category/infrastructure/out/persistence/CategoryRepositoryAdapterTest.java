@@ -24,10 +24,10 @@ import dev.jsamuelap.oikonomiaapi.category.domain.model.Category;
 import dev.jsamuelap.oikonomiaapi.category.domain.model.FlowType;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.in.CategoryDetail;
 import dev.jsamuelap.oikonomiaapi.category.domain.port.out.CategoryRepositoryPort;
-import dev.jsamuelap.oikonomiaapi.support.PersistenceTestSupport;
+import dev.jsamuelap.oikonomiaapi.support.IntegrationTestSupport;
 
 @DisplayName("Category repository adapter")
-public class CategoryRepositoryAdapterTest extends PersistenceTestSupport {
+public class CategoryRepositoryAdapterTest extends IntegrationTestSupport {
   @Autowired
   private CategoryRepositoryPort categoryRepository;
 
