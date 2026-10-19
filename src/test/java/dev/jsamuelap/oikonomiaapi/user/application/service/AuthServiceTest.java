@@ -128,6 +128,7 @@ class AuthServiceTest {
       when(passwordEncoder.matches(USER_RAW_PASSWORD, user.getPasswordHash())).thenReturn(true);
       when(tokenGenerator.generateAccessToken(any(), any())).thenReturn("raw-access-token");
       when(tokenGenerator.generateRefreshToken(any())).thenReturn("raw-refresh-token");
+      when(tokenGenerator.refreshTokenTtl()).thenReturn(Duration.ofDays(30));
       when(tokenHasher.hash(any())).thenReturn("hashed-token");
 
       var command = new AuthenticateUserCommand(USER_EMAIL, USER_RAW_PASSWORD);
