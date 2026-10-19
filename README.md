@@ -23,3 +23,41 @@ Actualmente en desarrollo - más funciones y tecnologías por venir.
 ## Estado
 
 En desarrollo - consulta AGENTS.md para el setup de desarrollo.
+
+## Ejecución
+
+### Docker compose
+
+Levantar base de datos Postgres y API
+
+```bash
+docker compose --profile app up -d --build
+```
+
+Levantar solo base de datos
+
+```bash
+docker compose up -d
+```
+
+Levantar solo la API
+
+```bash
+docker build -t oikonomia-api .
+```
+
+Eliminar servicios y datos
+
+```bash
+docker compose --profile app down -v
+```
+
+### Dockerfile
+
+```bash
+docker run --rm --name oikonomia-api -p 8081:8080 `
+  --env-file .env `
+  -e DB_URL='jdbc:postgresql://host.docker.internal:5432/oikonomia' `
+  -e SPRING_PROFILES_ACTIVE=dev `
+  oikonomia-api
+```
