@@ -322,28 +322,42 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.6.3</version>
-        <executions>
-          <execution>
-            <id>git-hooks</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <phase>initialize</phase>
-            <configuration>
-              <executable>git</executable>
-              <arguments>
-                <argument>config</argument>
-                <argument>core.hooksPath</argument>
-                <argument>.githooks</argument>
-              </arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>git-hooks</id>
+      <activation>
+        <file>
+          <exists>${basedir}/.git/</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.6.3</version>
+            <executions>
+              <execution>
+                <id>git-hooks</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <phase>initialize</phase>
+                <configuration>
+                  <executable>git</executable>
+                  <arguments>
+                    <argument>config</argument>
+                    <argument>core.hooksPath</argument>
+                    <argument>.githooks</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
