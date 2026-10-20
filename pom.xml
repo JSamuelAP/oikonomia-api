@@ -11,22 +11,56 @@
   </parent>
   <groupId>dev.jsamuelap</groupId>
   <artifactId>oikonomia-api</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>oikonomia-api</name>
-  <description>oikonomia-api</description>
-  <url/>
+  <description>REST API para gestión de finanzas personales: registro de ingresos, gastos, categorías, transacciones y
+    presupuestos mensuales. Monolito modular con Spring Modulith, arquitectura hexagonal/DDD, autenticación JWT sin
+    estado.</description>
+  <url>https://github.com/JSamuelAP/oikonomia-api</url>
+  <inceptionYear>2026</inceptionYear>
+  <organization>
+    <name>jsamuelap</name>
+    <url>https://github.com/JSamuelAP</url>
+  </organization>
   <licenses>
-    <license/>
+    <license>
+      <name>MIT License</name>
+      <url>https://choosealicense.com/licenses/mit/</url>
+      <distribution>repo</distribution>
+      <comments>El código fuente está licenciado bajo MIT. Recursos visuales (logos, imágenes, marca personal) NO están
+        cubiertos por esta licencia y no pueden reutilizarse sin permiso explícito.</comments>
+    </license>
   </licenses>
   <developers>
-    <developer/>
+    <developer>
+      <id>jsamuel</id>
+      <name>Samuel</name>
+      <email>sp4619168@gmail.com</email>
+      <url>https://github.com/JSamuelAP</url>
+      <organization>jsamuelap</organization>
+      <organizationUrl>https://github.com/JSamuelAP</organizationUrl>
+      <roles>
+        <role>Arquitecto</role>
+        <role>Desarrollador</role>
+        <role>Mantenenedor</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
   </developers>
   <scm>
-    <connection/>
-    <developerConnection/>
-    <tag/>
-    <url/>
+    <connection>scm:git:https://github.com/JSamuelAP/oikonomia-api.git</connection>
+    <developerConnection>scm:git:git@github.com:JSamuelAP/oikonomia-api.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/JSamuelAP/oikonomia-api</url>
   </scm>
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/JSamuelAP/oikonomia-api/issues</url>
+  </issueManagement>
+  <ciManagement>
+    <system>GitHub Actions</system>
+    <url>https://github.com/JSamuelAP/oikonomia-api/actions</url>
+  </ciManagement>
   <properties>
     <java.version>25</java.version>
     <spring-modulith.version>2.1.1</spring-modulith.version>
