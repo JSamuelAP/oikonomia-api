@@ -19,7 +19,7 @@ autenticación con JWT.
 - [Comandos](#comandos)
 - [Frontend](#frontend)
 - [Retos técnicos y lecciones aprendidas](#retos-técnicos-y-lecciones-aprendidas)
-- [Concacto](#contacto)
+- [Contacto](#contacto)
 - [Licencia](#licencia)
 
 ## Sobre el proyecto
@@ -254,11 +254,9 @@ desarrollo:
 
 ### Arranque
 
-```bash
-# Clonar proyecto
-git clone https://github.com/JSamuelAP/oikonomia-api.git
-cd oikonomia-api
+Después de clonar el repositorio:
 
+```bash
 # Crear archivo de variables de entorno
 cp .env.example .env # Unix
 copy .env.example .env # PowerShell
