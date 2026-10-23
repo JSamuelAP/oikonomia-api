@@ -360,6 +360,8 @@ docker compose --profile app down -v
 [Repositorio](https://github.com/JSamuelAP/oikonomia-ui) del cliente web. Construido con Angular 22, PrimeNG,
 TailwindCSS y Signal Forms.
 
+Esta API es compatible con la versión __v0.1.0__ de la app.
+
 ## Retos técnicos y lecciones aprendidas
 
 | Problema                                        | Causa                                                                           | Solución                                                                        |
