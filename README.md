@@ -40,8 +40,8 @@ me di cuenta de que tenía un problema real. Era propio, pero serviría para ten
 poner en práctica mis habilidades como ingeniero de software.
 
 Actualmente, me estoy concentrando en tener listo un MVP en lugar de tratar de tener el proyecto perfecto. Mi idea es
-usar sus funcionalidades básicas, darme cuenta de que le falta, qué sería útil y proponer cambios absurdos (ventajas de ser
-mi propio usuario).
+usar sus funcionalidades básicas, darme cuenta de que le falta, qué sería útil y proponer cambios absurdos (ventajas de
+ser mi propio usuario).
 
 También pienso agregar mejoras a la aplicación, como observabilidad, monitoreo y arreglar detalles de seguridad. Así que
 el proyecto seguirá recibiendo actualizaciones de todo tipo.
@@ -233,7 +233,9 @@ Más de 350 test:
   levantar un servidor donde probar.
 - Prueba de arquitectura para validar los límites entre módulos con Spring Modulith.
 
-Considero que esta parte es una de las más importantes. Aprendí a diseñar pruebas, manejar todos los casos posibles y a mockear objetos. También me ayudó a descubrir bugs y problemas de seguridad. Ahora, cada vez que toco algo, simplemente ejecuto los test y me aseguro de que todo sigue funcionando.
+Considero que esta parte es una de las más importantes. Aprendí a diseñar pruebas, manejar todos los casos posibles y a
+mockear objetos. También me ayudó a descubrir bugs y problemas de seguridad. Ahora, cada vez que toco algo, simplemente
+ejecuto los test y me aseguro de que todo sigue funcionando.
 
 ## Calidad y CI/CD
 
@@ -244,6 +246,9 @@ desarrollo:
 - **CI:** GitHub Actions ejecuta verify con Testcontainers. Al integrar en main o develop, construye la imagen.
 - **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen.
 - **CD:** próximamente
+
+La rama `main` no puede recibir commits directamente; deben integrarse mediante pull requests. Incluyo plantillas para
+abrir issued y pull requests.
 
 ## Primeros pasos
 
@@ -280,7 +285,7 @@ docker compose --profile app up -d --build
 ### Variables de entorno
 
 | Variable                 | Obligatoria | Por defecto | Descripción                                  |
-| ------------------------ | ----------- | ----------- | -------------------------------------------- |
+|--------------------------|-------------|-------------|----------------------------------------------|
 | `JWT_SECRET`             | Sí          | —           | Secreto de firma de los JWT, mínimo 32 bytes |
 | `DB_URL`                 | Sí          | —           | URL JDBC de PostgreSQL                       |
 | `DB_USERNAME`            | Sí          | —           | Usuario de la base de datos                  |
@@ -352,13 +357,13 @@ docker compose --profile app down -v
 
 ![Captura de pantalla de la página de transacciones](docs/images/frontend-overview.png)
 
-[Repositorio](https://github.com/JSamuelAP/oikonomia-ui) del cliente web. Construido con Angular 22, PrimeNG, TailwindCSS
-y Signal Forms.
+[Repositorio](https://github.com/JSamuelAP/oikonomia-ui) del cliente web. Construido con Angular 22, PrimeNG,
+TailwindCSS y Signal Forms.
 
 ## Retos técnicos y lecciones aprendidas
 
 | Problema                                        | Causa                                                                           | Solución                                                                        |
-| ----------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+|-------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | La revocación de sesiones por reuso se deshacía | Lanzaba una excepción que después revertía la transacción                       | `noRollbackFor` en el caso de uso y una prueba de extremo a extremo que lo fija |
 | `INSERT` en lugar de `UPDATE` al guardar        | El dominio genera el UUID, así que Hibernate creía que la entidad ya existía    | `Persistable` con un indicador de entidad nueva                                 |
 | Un nombre eliminado no se podía reutilizar      | Restricción `UNIQUE` que contaba también las filas eliminadas                   | Índices únicos parciales                                                        |
