@@ -11,7 +11,7 @@
   </parent>
   <groupId>dev.jsamuelap</groupId>
   <artifactId>oikonomia-api</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <name>oikonomia-api</name>
   <description>REST API para gestión de finanzas personales: registro de ingresos, gastos, categorías, transacciones y
     presupuestos mensuales. Monolito modular con Spring Modulith, arquitectura hexagonal/DDD, autenticación JWT sin
