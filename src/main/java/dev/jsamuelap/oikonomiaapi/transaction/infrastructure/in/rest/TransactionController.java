@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyBalanceUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionUseCase;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +46,7 @@ public class TransactionController {
   private final CreateTransactionUseCase createTransactionUseCase;
   private final UpdateTransactionUseCase updateTransactionUseCase;
   private final DeleteTransactionUseCase deleteTransactionUseCase;
+  private final GetMonthlyBalanceUseCase getMonthlyBalanceUseCase;
   private final TransactionRestMapper mapper;
 
   // spotless:off
@@ -107,5 +110,23 @@ public class TransactionController {
     @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     deleteTransactionUseCase.deleteById(id, principal.userId());
     return ResponseEntity.noContent().build();
+  }
+
+  // spotless:off
+  @GetMapping("/balance")
+  @Operation(
+    summary = "Get monthly balance",
+    description = "Retrieves the monthly balance (income, expense, net) for the authenticated user")
+  @ApiResponse(responseCode = "200", description = "Monthly balance retrieved successfully")
+  public ResponseEntity<MonthlyBalanceResponse> getMonthlyBalance(
+    @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01", required = true)
+    @DateTimeFormat(pattern = "yyyy-MM")
+    @RequestParam final YearMonth month,
+    @Parameter(hidden = true)
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal
+  ) {
+    // spotless:on
+    MonthlyBalance balance = getMonthlyBalanceUseCase.getMonthlyBalance(principal.userId(), month);
+    return ResponseEntity.ok(mapper.toResponse(balance));
   }
 }

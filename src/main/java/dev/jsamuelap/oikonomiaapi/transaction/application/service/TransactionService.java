@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.transaction.application.service;
 
+import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +18,10 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyBalanceUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -38,7 +41,8 @@ public class TransactionService
     GetTransactionUseCase,
     CreateTransactionUseCase,
     UpdateTransactionUseCase,
-    DeleteTransactionUseCase {
+    DeleteTransactionUseCase,
+    GetMonthlyBalanceUseCase {
   private final TransactionRepositoryPort transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -107,6 +111,41 @@ public class TransactionService
       transaction.delete();
       transactionRepository.save(transaction);
     }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public MonthlyBalance getMonthlyBalance(UUID userId, YearMonth month) {
+    if (month.getYear() < 2025 || month.getYear() > 2100) {
+      throw new DomainException("El año debe ser entre 2025 y 2100");
+    }
+
+    Map<UUID, BigDecimal> amounts = transactionRepository.sumAmountsByCategory(userId, month);
+    if (amounts.isEmpty()) {
+      return MonthlyBalance.empty(month);
+    }
+
+    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(amounts.keySet(), userId);
+
+    BigDecimal totalIncome = BigDecimal.ZERO.setScale(2);
+    BigDecimal totalExpense = BigDecimal.ZERO.setScale(2);
+
+    for (Map.Entry<UUID, BigDecimal> entry : amounts.entrySet()) {
+      CategorySummary category = categories.get(entry.getKey());
+      if (category == null) {
+        throw new IllegalStateException("La categoría %s no existe".formatted(entry.getKey()));
+      }
+
+      if (category.isIncome()) {
+        totalIncome = totalIncome.add(entry.getValue());
+      } else if (category.isExpense()) {
+        totalExpense = totalExpense.add(entry.getValue());
+      } else {
+        throw new IllegalStateException("Tipo de flujo desconocido: " + category.flowType());
+      }
+    }
+
+    return new MonthlyBalance(month, totalIncome, totalExpense);
   }
 
   private void validateCategoryExists(UUID userId, UUID categoryId) {
