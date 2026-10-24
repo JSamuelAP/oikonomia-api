@@ -20,4 +20,13 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionJpaEn
     LocalDate startOfNextMonth);
 
   Optional<TransactionJpaEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+
+  @Query("""
+      SELECT t.categoryId AS categoryId, SUM(t.amount) AS total
+      FROM TransactionJpaEntity t
+      WHERE t.userId = :userId AND t.deletedAt IS NULL
+        AND t.transactionDate >= :start AND t.transactionDate < :end
+      GROUP BY t.categoryId
+    """)
+  List<CategoryTotal> sumAmountsByCategory(UUID userId, LocalDate start, LocalDate end);
 }

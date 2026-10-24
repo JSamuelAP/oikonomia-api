@@ -1,10 +1,13 @@
 package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.out.persistence.jpa;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -53,5 +56,11 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     entity.setNotes(transaction.getNotes());
     entity.setDeletedAt(transaction.getDeletedAt());
     return entity;
+  }
+
+  @Override
+  public Map<UUID, BigDecimal> sumAmountsByCategory(UUID userId, YearMonth month) {
+    return jpaRepository.sumAmountsByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1)).stream()
+      .collect(Collectors.toMap(CategoryTotal::getCategoryId, CategoryTotal::getTotal));
   }
 }

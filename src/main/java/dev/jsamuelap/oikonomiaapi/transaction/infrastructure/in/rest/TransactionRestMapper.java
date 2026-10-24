@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -21,4 +23,8 @@ public interface TransactionRestMapper {
   CreateTransactionCommand toCommand(CreateTransactionRequest request, UUID userId);
 
   UpdateTransactionCommand toCommand(UpdateTransactionRequest request, UUID id, UUID userId);
+
+  @Mapping(target = "month", expression = "java(monthlyBalance.month().toString())")
+  @Mapping(target = "balance", expression = "java(monthlyBalance.balance())")
+  MonthlyBalanceResponse toResponse(MonthlyBalance monthlyBalance);
 }
