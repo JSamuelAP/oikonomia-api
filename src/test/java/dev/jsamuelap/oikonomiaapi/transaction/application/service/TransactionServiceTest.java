@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
@@ -58,12 +59,12 @@ class TransactionServiceTest {
   class GetAll {
     @ParameterizedTest(name = "should reject: {0}")
     @DisplayName("Should reject when year is invalid")
-    @ValueSource(shorts = {-431, 0, 2024, 2101})
+    @ValueSource(shorts = {-431, 0, PeriodRules.MIN_YEAR - 1, PeriodRules.MAX_YEAR + 1})
     void shouldRejectWhenYearIsInvalid(short year) {
       YearMonth yearMonth = YearMonth.of(year, Month.SEPTEMBER);
 
       assertThatThrownBy(() -> transactionService.getAll(UUID.randomUUID(), yearMonth))
-        .isInstanceOf(DomainException.class).hasMessageContaining("El año debe ser entre");
+        .isInstanceOf(DomainException.class).hasMessageContaining("El año debe estar entre");
 
       verify(transactionRepository, never()).findByUser(any(), any());
       verify(categoryLookupPort, never()).findByIds(any(), any());

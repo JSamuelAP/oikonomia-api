@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
@@ -50,9 +51,7 @@ public class TransactionService
   @Transactional(readOnly = true)
   public List<TransactionView> getAll(UUID userId, YearMonth yearMonth) {
     YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
-    if (effectiveYearMonth.getYear() < 2025 || effectiveYearMonth.getYear() > 2100) {
-      throw new DomainException("El año debe ser entre 2025 y 2100");
-    }
+    PeriodRules.requireSupportedYear(effectiveYearMonth);
 
     List<Transaction> transactions = transactionRepository.findByUser(userId, effectiveYearMonth);
 
@@ -116,9 +115,7 @@ public class TransactionService
   @Override
   @Transactional(readOnly = true)
   public MonthlyBalance getMonthlyBalance(UUID userId, YearMonth month) {
-    if (month.getYear() < 2025 || month.getYear() > 2100) {
-      throw new DomainException("El año debe ser entre 2025 y 2100");
-    }
+    PeriodRules.requireSupportedYear(month);
 
     Map<UUID, BigDecimal> amounts = transactionRepository.sumAmountsByCategory(userId, month);
     if (amounts.isEmpty()) {
