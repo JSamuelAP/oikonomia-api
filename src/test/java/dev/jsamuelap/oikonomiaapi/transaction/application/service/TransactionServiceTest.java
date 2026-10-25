@@ -19,11 +19,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -35,6 +37,7 @@ import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -290,6 +293,123 @@ class TransactionServiceTest {
 
       verify(transactionRepository)
         .save(argThat(transaction -> transaction.getId().equals(id) && transaction.isDeleted()));
+    }
+  }
+
+  @Nested
+  @DisplayName("Get monthly balance")
+  class GetMonthlyBalance {
+    private final UUID userId = UUID.randomUUID();
+    private final YearMonth month = YearMonth.of(PeriodRules.MIN_YEAR, 1);
+
+    @Test
+    @DisplayName("Should reject month when year is not supported")
+    void shouldRejectMonthWhenYearIsNotSupported() {
+      var invalidMonth = YearMonth.of(PeriodRules.MIN_YEAR - 1, 1);
+      assertThatThrownBy(() -> transactionService.getMonthlyBalance(userId, invalidMonth))
+        .isInstanceOf(DomainException.class);
+      verify(transactionRepository, never()).sumAmountsByCategory(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return zero balance when month has no transactions")
+    void shouldReturnZeroBalanceWhenMonthHasNotTransactions() {
+      when(transactionRepository.sumAmountsByCategory(userId, month)).thenReturn(Map.of());
+
+      var result = transactionService.getMonthlyBalance(userId, month);
+      SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(result.month()).isEqualTo(month);
+        softly.assertThat(result.totalIncome()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+        softly.assertThat(result.totalExpense()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+        softly.assertThat(result.balance()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+      });
+      verify(categoryLookupPort, never()).findByIds(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should sum income and expense by flow type")
+    void shouldSumIncomeAndExpenseByFlowType() {
+      var incomeCat1 = UUID.randomUUID();
+      var incomeCat2 = UUID.randomUUID();
+      var expenseCat1 = UUID.randomUUID();
+      var expenseCat2 = UUID.randomUUID();
+
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(incomeCat1, new BigDecimal("1000.00"), incomeCat2, new BigDecimal("500.00"), expenseCat1,
+          new BigDecimal("300.00"), expenseCat2, new BigDecimal("200.00")));
+
+      when(categoryLookupPort.findByIds(Set.of(incomeCat1, incomeCat2, expenseCat1, expenseCat2), userId)).thenReturn(
+        Map.of(incomeCat1, category(incomeCat1, "INCOME", false), incomeCat2, category(incomeCat2, "INCOME", false),
+          expenseCat1, category(expenseCat1, "EXPENSE", false), expenseCat2, category(expenseCat2, "EXPENSE", false)));
+
+      var result = transactionService.getMonthlyBalance(userId, month);
+
+      SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(result.month()).isEqualTo(month);
+        softly.assertThat(result.totalIncome()).isEqualTo(new BigDecimal("1500.00"));
+        softly.assertThat(result.totalExpense()).isEqualTo(new BigDecimal("500.00"));
+        softly.assertThat(result.balance()).isEqualTo(new BigDecimal("1000.00"));
+      });
+    }
+
+    @Test
+    @DisplayName("Should keep two decimals when month has only expenses")
+    void shouldKeepTwoDecimalsWhenMonthHasOnlyExpenses() {
+      UUID categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("300.50")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, "EXPENSE", false)));
+
+      var result = transactionService.getMonthlyBalance(userId, month);
+
+      SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(result.totalIncome()).as("income").isEqualTo(new BigDecimal("0.00"));
+        softly.assertThat(result.balance()).as("balance").isEqualTo(new BigDecimal("-300.50"));
+      });
+    }
+
+    @Test
+    @DisplayName("Should include transactions of deleted categories")
+    void shouldIncludeTransactionsOfDeletedCategories() {
+      UUID categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("200.00")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, "INCOME", true)));
+
+      assertThat(transactionService.getMonthlyBalance(userId, month).totalIncome()).isEqualTo(new BigDecimal("200.00"));
+    }
+
+    @Test
+    @DisplayName("Should fail when category is missing from lookup")
+    void shouldFailWhenCategoryIsMissingFromLookup() {
+      UUID categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("100.00")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of());
+
+      assertThatThrownBy(() -> transactionService.getMonthlyBalance(userId, month))
+        .isInstanceOf(IllegalStateException.class).hasMessageContaining(categoryId.toString());
+    }
+
+    @ParameterizedTest
+    @DisplayName("Should fail when flow type is unknown")
+    @NullSource
+    @ValueSource(strings = {"TRANSFER", "income", ""})
+    void shouldFailWhenFlowTypeIsUnknown(String flowType) {
+      UUID categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("100.00")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, flowType, false)));
+
+      assertThatThrownBy(() -> transactionService.getMonthlyBalance(userId, month))
+        .isInstanceOf(IllegalStateException.class).hasMessageContaining("Tipo de flujo desconocido");
+    }
+
+    private static CategorySummary category(UUID id, String flowType, boolean deleted) {
+      return new CategorySummary(id, "Any", flowType, deleted);
     }
   }
 }

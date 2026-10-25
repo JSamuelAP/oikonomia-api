@@ -124,8 +124,8 @@ public class TransactionService
 
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(amounts.keySet(), userId);
 
-    BigDecimal totalIncome = BigDecimal.ZERO.setScale(2);
-    BigDecimal totalExpense = BigDecimal.ZERO.setScale(2);
+    BigDecimal totalIncome = MonthlyBalance.ZERO_AMOUNT;
+    BigDecimal totalExpense = MonthlyBalance.ZERO_AMOUNT;
 
     for (Map.Entry<UUID, BigDecimal> entry : amounts.entrySet()) {
       CategorySummary category = categories.get(entry.getKey());

@@ -3,6 +3,7 @@ package dev.jsamuelap.oikonomiaapi.transaction.infrastructure.out.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.within;
 
 import java.math.BigDecimal;
@@ -281,6 +282,103 @@ public class TransactionRepositoryAdapterTest extends IntegrationTestSupport {
     }
   }
 
+  @Nested
+  @DisplayName("Sum amounts by category")
+  class SumAmountsByCategory {
+    private static final YearMonth MARCH = YearMonth.of(2025, 3);
+
+    @Test
+    @DisplayName("Should sum amounts per category")
+    void shouldSumAmountsPerCategory() {
+      UUID userId = insertUser();
+      UUID groceries = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      UUID salary = insertCategory(userId, "Salary", FlowType.INCOME);
+      newTransactionOn(userId, groceries, LocalDate.of(2025, 3, 5), "100.10");
+      newTransactionOn(userId, groceries, LocalDate.of(2025, 3, 20), "250.40");
+      newTransactionOn(userId, salary, LocalDate.of(2025, 3, 1), "40.00");
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH))
+        .containsOnly(entry(groceries, new BigDecimal("350.50")), entry(salary, new BigDecimal("40.00")));
+    }
+
+    @Test
+    @DisplayName("Should include boundary days and exclude adjacent ones")
+    void shouldIncludeBoundaryDaysAndExcludeAdjacentOnes() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 2, 28), "1.00");
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 3, 1), "10.00");
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 3, 31), "100.00");
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 4, 1), "1000.00");
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH))
+        .containsOnly(entry(categoryId, new BigDecimal("110.00")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("Should handle year rollover and leap year")
+    @CsvSource({"2025-12, 2025-12-31, 2026-01-01", "2024-02, 2024-02-29, 2024-03-01"})
+    void shouldHandleYearRolloverAndLeapYear(YearMonth month, LocalDate lastDay, LocalDate nextDay) {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      newTransactionOn(userId, categoryId, lastDay, "10.00");
+      newTransactionOn(userId, categoryId, nextDay, "1000.00");
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, month))
+        .containsOnly(entry(categoryId, new BigDecimal("10.00")));
+    }
+
+    @Test
+    @DisplayName("Should exclude deleted transactions")
+    void shouldExcludeDeletedTransactions() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 3, 10), "10.00");
+      Transaction deleted = newTransactionOn(userId, categoryId, LocalDate.of(2025, 3, 11), "500.00");
+      deleted.delete();
+      transactionRepository.save(deleted);
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH))
+        .containsOnly(entry(categoryId, new BigDecimal("10.00")));
+    }
+
+    @Test
+    @DisplayName("Should exclude transactions of other users")
+    void shouldExcludeTransactionsOfOtherUsers() {
+      UUID userId = insertUser();
+      UUID otherUser = insertUser();
+      UUID ownCategory = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      UUID otherCategory = insertCategory(otherUser, "Groceries", FlowType.EXPENSE);
+      newTransactionOn(userId, ownCategory, LocalDate.of(2025, 3, 10), "10.00");
+      newTransactionOn(otherUser, otherCategory, LocalDate.of(2025, 3, 10), "999.00");
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH))
+        .containsOnly(entry(ownCategory, new BigDecimal("10.00")));
+    }
+
+    @Test
+    @DisplayName("Should include transactions of deleted categories")
+    void shouldIncludeTransactionsOfDeletedCategories() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Old", FlowType.EXPENSE);
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 3, 10), "10.00");
+      jdbc.update("UPDATE categories SET deleted_at = now() WHERE id = ?", categoryId);
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH))
+        .containsOnly(entry(categoryId, new BigDecimal("10.00")));
+    }
+
+    @Test
+    @DisplayName("Should return empty map when month has no transactions")
+    void shouldReturnEmptyMapWhenMonthHasNoTransactions() {
+      UUID userId = insertUser();
+      UUID categoryId = insertCategory(userId, "Groceries", FlowType.EXPENSE);
+      newTransactionOn(userId, categoryId, LocalDate.of(2025, 4, 10), "10.00");
+
+      assertThat(transactionRepository.sumAmountsByCategory(userId, MARCH)).isEmpty();
+    }
+  }
+
   private Transaction newTransaction(UUID userId, FlowType flowType) {
     UUID categoryId = insertCategory(userId, "Cat-" + UUID.randomUUID(), flowType);
     return transactionRepository
@@ -289,6 +387,10 @@ public class TransactionRepositoryAdapterTest extends IntegrationTestSupport {
 
   private Transaction newTransactionOn(UUID userId, UUID categoryId, LocalDate date) {
     return transactionRepository.save(Transaction.create(userId, categoryId, new BigDecimal("200.00"), date, ""));
+  }
+
+  private Transaction newTransactionOn(UUID userId, UUID categoryId, LocalDate date, String amount) {
+    return transactionRepository.save(Transaction.create(userId, categoryId, new BigDecimal(amount), date, ""));
   }
 
   private Transaction deleteTransaction(UUID userId, FlowType flowType) {
