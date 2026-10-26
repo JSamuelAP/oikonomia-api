@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.transaction.application.service;
 
+import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -12,13 +13,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyBalanceUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -38,7 +42,8 @@ public class TransactionService
     GetTransactionUseCase,
     CreateTransactionUseCase,
     UpdateTransactionUseCase,
-    DeleteTransactionUseCase {
+    DeleteTransactionUseCase,
+    GetMonthlyBalanceUseCase {
   private final TransactionRepositoryPort transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -46,9 +51,7 @@ public class TransactionService
   @Transactional(readOnly = true)
   public List<TransactionView> getAll(UUID userId, YearMonth yearMonth) {
     YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
-    if (effectiveYearMonth.getYear() < 2025 || effectiveYearMonth.getYear() > 2100) {
-      throw new DomainException("El año debe ser entre 2025 y 2100");
-    }
+    PeriodRules.requireSupportedYear(effectiveYearMonth);
 
     List<Transaction> transactions = transactionRepository.findByUser(userId, effectiveYearMonth);
 
@@ -107,6 +110,39 @@ public class TransactionService
       transaction.delete();
       transactionRepository.save(transaction);
     }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public MonthlyBalance getMonthlyBalance(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
+
+    Map<UUID, BigDecimal> amounts = transactionRepository.sumAmountsByCategory(userId, month);
+    if (amounts.isEmpty()) {
+      return MonthlyBalance.empty(month);
+    }
+
+    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(amounts.keySet(), userId);
+
+    BigDecimal totalIncome = MonthlyBalance.ZERO_AMOUNT;
+    BigDecimal totalExpense = MonthlyBalance.ZERO_AMOUNT;
+
+    for (Map.Entry<UUID, BigDecimal> entry : amounts.entrySet()) {
+      CategorySummary category = categories.get(entry.getKey());
+      if (category == null) {
+        throw new IllegalStateException("La categoría %s no existe".formatted(entry.getKey()));
+      }
+
+      if (category.isIncome()) {
+        totalIncome = totalIncome.add(entry.getValue());
+      } else if (category.isExpense()) {
+        totalExpense = totalExpense.add(entry.getValue());
+      } else {
+        throw new IllegalStateException("Tipo de flujo desconocido: " + category.flowType());
+      }
+    }
+
+    return new MonthlyBalance(month, totalIncome, totalExpense);
   }
 
   private void validateCategoryExists(UUID userId, UUID categoryId) {
