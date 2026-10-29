@@ -33,11 +33,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
-import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -319,9 +319,9 @@ class TransactionServiceTest {
       var result = transactionService.getMonthlyBalance(userId, month);
       SoftAssertions.assertSoftly(softly -> {
         softly.assertThat(result.month()).isEqualTo(month);
-        softly.assertThat(result.totalIncome()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
-        softly.assertThat(result.totalExpense()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
-        softly.assertThat(result.balance()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+        softly.assertThat(result.totalIncome()).isEqualTo(MoneyRules.ZERO_AMOUNT);
+        softly.assertThat(result.totalExpense()).isEqualTo(MoneyRules.ZERO_AMOUNT);
+        softly.assertThat(result.balance()).isEqualTo(MoneyRules.ZERO_AMOUNT);
       });
       verify(categoryLookupPort, never()).findByIds(any(), any());
     }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
@@ -124,8 +125,8 @@ public class TransactionService
 
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(amounts.keySet(), userId);
 
-    BigDecimal totalIncome = MonthlyBalance.ZERO_AMOUNT;
-    BigDecimal totalExpense = MonthlyBalance.ZERO_AMOUNT;
+    BigDecimal totalIncome = MoneyRules.ZERO_AMOUNT;
+    BigDecimal totalExpense = MoneyRules.ZERO_AMOUNT;
 
     for (Map.Entry<UUID, BigDecimal> entry : amounts.entrySet()) {
       CategorySummary category = categories.get(entry.getKey());
