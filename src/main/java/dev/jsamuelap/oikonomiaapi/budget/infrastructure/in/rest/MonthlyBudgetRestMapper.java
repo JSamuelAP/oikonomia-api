@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.mapstruct.Mapper;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
 
@@ -13,7 +14,9 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetComma
 public interface MonthlyBudgetRestMapper {
   List<MonthlyBudgetResponse> toResponse(List<MonthlyBudgetView> monthlyBudgets);
 
-  MonthlyBudgetResponse toResponse(MonthlyBudgetView monthlyBudgets);
+  MonthlyBudgetResponse toResponse(MonthlyBudgetView monthlyBudget);
+
+  MonthlyBudgetDetailResponse toResponse(MonthlyBudgetDetailView monthlyBudget);
 
   CreateMonthlyBudgetCommand toCommand(CreateMonthlyBudgetRequest createMonthlyBudgetRequest, UUID userId);
 

@@ -32,12 +32,15 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.exception.MonthlyBudgetAlreadyEx
 import dev.jsamuelap.oikonomiaapi.budget.domain.exception.MonthlyBudgetNotFoundException;
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Monthly budget service")
@@ -55,11 +58,12 @@ class MonthlyBudgetServiceTest {
   class GetAll {
     @ParameterizedTest(name = "should reject: {0}")
     @DisplayName("Should reject when year is invalid")
-    @ValueSource(shorts = {-431, 0, 2024, 2101})
+    @ValueSource(shorts = {-431, 0, PeriodRules.MIN_YEAR - 1, PeriodRules.MAX_YEAR + 1})
     void shouldRejectWhenYearIsInvalid(short invalidYear) {
       YearMonth invalidYearMonth = YearMonth.of(invalidYear, 9);
+
       assertThatThrownBy(() -> monthlyBudgetService.getAll(UUID.randomUUID(), invalidYearMonth))
-        .isInstanceOf(DomainException.class).hasMessageContaining("El año debe ser entre");
+        .isInstanceOf(DomainException.class).hasMessageContaining("El año debe estar entre");
 
       verify(monthlyBudgetRepository, never()).findAllByUser(any(), any());
       verify(categoryLookupPort, never()).findByIds(any(), any());
@@ -108,30 +112,32 @@ class MonthlyBudgetServiceTest {
     void shouldRejectWhenBudgetDoesNotExist() {
       UUID id = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
-      when(monthlyBudgetRepository.findByIdAndUser(id, userId)).thenReturn(Optional.empty());
+      when(monthlyBudgetRepository.findDetailByIdAndUser(id, userId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> monthlyBudgetService.getById(id, userId))
         .isInstanceOf(MonthlyBudgetNotFoundException.class).hasMessageContaining(id.toString());
     }
 
     @Test
-    @DisplayName("Should return monthly budget view")
-    void shouldReturnMonthlyBudgetView() {
+    @DisplayName("Should return monthly budget detail")
+    void shouldReturnMonthlyBudgetDetail() {
       UUID id = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
       UUID categoryId = UUID.randomUUID();
       Short month = 9;
       Short year = 2026;
       BigDecimal amount = BigDecimal.TEN;
-      MonthlyBudget budget = MonthlyBudget.reconstitute(id, userId, categoryId, month, year, amount, null);
-      when(monthlyBudgetRepository.findByIdAndUser(id, userId)).thenReturn(Optional.of(budget));
+      Instant instant = Instant.now();
+      MonthlyBudgetDetail budget = new MonthlyBudgetDetail(id, categoryId, month, year, amount, instant, instant);
+      when(monthlyBudgetRepository.findDetailByIdAndUser(id, userId)).thenReturn(Optional.of(budget));
 
       CategorySummary category = new CategorySummary(categoryId, "Groceries", "EXPENSE", false);
       when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of(categoryId, category));
 
-      MonthlyBudgetView expected = new MonthlyBudgetView(id, userId, month, year, amount, category);
+      MonthlyBudgetDetailView expected = new MonthlyBudgetDetailView(id, month, year, amount, category, instant,
+        instant);
 
-      MonthlyBudgetView response = monthlyBudgetService.getById(id, userId);
+      MonthlyBudgetDetailView response = monthlyBudgetService.getById(id, userId);
       assertThat(response).isEqualTo(expected);
     }
   }

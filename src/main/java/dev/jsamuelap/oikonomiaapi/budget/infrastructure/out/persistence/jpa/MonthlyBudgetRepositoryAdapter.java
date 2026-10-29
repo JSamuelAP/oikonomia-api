@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ public class MonthlyBudgetRepositoryAdapter implements MonthlyBudgetRepositoryPo
   @Override
   public Optional<MonthlyBudget> findByIdAndUser(UUID id, UUID userId) {
     return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDomain);
+  }
+
+  @Override
+  public Optional<MonthlyBudgetDetail> findDetailByIdAndUser(UUID id, UUID userId) {
+    return jpaRepository.findByIdAndUserIdAndDeletedAtIsNull(id, userId).map(mapper::toDetail);
   }
 
   @Override

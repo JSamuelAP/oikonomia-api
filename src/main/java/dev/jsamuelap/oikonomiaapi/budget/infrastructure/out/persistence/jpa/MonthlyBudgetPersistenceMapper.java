@@ -3,6 +3,7 @@ package dev.jsamuelap.oikonomiaapi.budget.infrastructure.out.persistence.jpa;
 import org.mapstruct.Mapper;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 
 @Mapper(componentModel = "spring")
 public interface MonthlyBudgetPersistenceMapper {
@@ -30,4 +31,6 @@ public interface MonthlyBudgetPersistenceMapper {
     monthlyBudgetJpaEntity.setDeletedAt(monthlyBudget.getDeletedAt());
     return monthlyBudgetJpaEntity;
   }
+
+  MonthlyBudgetDetail toDetail(MonthlyBudgetJpaEntity entity);
 }

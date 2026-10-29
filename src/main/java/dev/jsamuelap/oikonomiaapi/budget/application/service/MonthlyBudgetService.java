@@ -19,13 +19,16 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCa
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.DeleteMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,9 +48,7 @@ public class MonthlyBudgetService
   @Transactional(readOnly = true)
   public List<MonthlyBudgetView> getAll(UUID userId, YearMonth yearMonth) {
     YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
-    if (effectiveYearMonth.getYear() < 2025 || effectiveYearMonth.getYear() > 2100) {
-      throw new DomainException("El año debe ser entre 2025 y 2100");
-    }
+    PeriodRules.requireSupportedYear(effectiveYearMonth);
 
     List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYearMonth);
 
@@ -60,15 +61,15 @@ public class MonthlyBudgetService
 
   @Override
   @Transactional(readOnly = true)
-  public MonthlyBudgetView getById(UUID id, UUID userId) {
-    MonthlyBudget budget = monthlyBudgetRepository.findByIdAndUser(id, userId)
+  public MonthlyBudgetDetailView getById(UUID id, UUID userId) {
+    MonthlyBudgetDetail budget = monthlyBudgetRepository.findDetailByIdAndUser(id, userId)
       .orElseThrow(() -> new MonthlyBudgetNotFoundException(id));
 
-    CategorySummary category = categoryLookupPort.findByIds(Set.of(budget.getCategoryId()), userId)
-      .get(budget.getCategoryId());
+    CategorySummary category = categoryLookupPort.findByIds(Set.of(budget.categoryId()), userId)
+      .get(budget.categoryId());
 
-    return new MonthlyBudgetView(budget.getId(), budget.getUserId(), budget.getMonth(), budget.getYear(),
-      budget.getExpectedAmount(), category);
+    return new MonthlyBudgetDetailView(budget.id(), budget.month(), budget.year(), budget.expectedAmount(), category,
+      budget.createdAt(), budget.updatedAt());
   }
 
   @Override
