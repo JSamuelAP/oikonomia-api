@@ -21,6 +21,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCo
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyBalanceUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyTotalsByCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
@@ -44,7 +45,8 @@ public class TransactionService
     CreateTransactionUseCase,
     UpdateTransactionUseCase,
     DeleteTransactionUseCase,
-    GetMonthlyBalanceUseCase {
+    GetMonthlyBalanceUseCase,
+    GetMonthlyTotalsByCategoryUseCase {
   private final TransactionRepositoryPort transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -144,6 +146,13 @@ public class TransactionService
     }
 
     return new MonthlyBalance(month, totalIncome, totalExpense);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Map<UUID, BigDecimal> getTotalsByCategory(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
+    return transactionRepository.sumAmountsByCategory(userId, month);
   }
 
   private void validateCategoryExists(UUID userId, UUID categoryId) {

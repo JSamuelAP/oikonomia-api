@@ -11,5 +11,7 @@ public record MonthlyBudgetResponse(
   @Schema(description = "Budget month (1-12)", example = "1") Short month,
   @Schema(description = "Budget year", example = "2026") Short year,
   @Schema(description = "Expected budget amount", example = "500.00") BigDecimal expectedAmount,
+  @Schema(description = "Total actual accumulated for the month for the category", example = "300.00") BigDecimal actualAmount,
+  @Schema(description = "Expected minus actual. Negative when the actual exceeds the expected.", example = "200.00") BigDecimal remainingAmount,
   @Schema(description = "Associated category summary") CategorySummaryResponse category) {
 }

@@ -1,6 +1,7 @@
 package dev.jsamuelap.oikonomiaapi.transaction.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -410,6 +411,34 @@ class TransactionServiceTest {
 
     private static CategorySummary category(UUID id, String flowType, boolean deleted) {
       return new CategorySummary(id, "Any", flowType, deleted);
+    }
+  }
+
+  @Nested
+  @DisplayName("Get totals by category")
+  class GetTotalsByCategory {
+    private final UUID userId = UUID.randomUUID();
+    private final YearMonth month = YearMonth.of(PeriodRules.MIN_YEAR, 1);
+
+    @Test
+    @DisplayName("Should reject month when year is not supported")
+    void shouldRejectMonthWhenYearIsNotSupported() {
+      var invalidMonth = YearMonth.of(PeriodRules.MIN_YEAR - 1, 1);
+      assertThatThrownBy(() -> transactionService.getTotalsByCategory(userId, invalidMonth))
+        .isInstanceOf(DomainException.class);
+      verify(transactionRepository, never()).sumAmountsByCategory(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should delegate to repository with the given user and month")
+    void shouldDelegateToRepositoryWithTheGivenUserAndMonth() {
+      var categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("200.00")));
+
+      var result = transactionService.getTotalsByCategory(userId, month);
+
+      assertThat(result).containsOnly(entry(categoryId, new BigDecimal("200.00")));
     }
   }
 }

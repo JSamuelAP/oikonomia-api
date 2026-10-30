@@ -7,5 +7,8 @@ import java.util.UUID;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
 
 public record MonthlyBudgetDetailView(UUID id, Short month, Short year, BigDecimal expectedAmount,
-  CategorySummary category, Instant createdAt, Instant updatedAt) {
+  BigDecimal actualAmount, CategorySummary category, Instant createdAt, Instant updatedAt) {
+  public BigDecimal remainingAmount() {
+    return expectedAmount.subtract(actualAmount);
+  }
 }

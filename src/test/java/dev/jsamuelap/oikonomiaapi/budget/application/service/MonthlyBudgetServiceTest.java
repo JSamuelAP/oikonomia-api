@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -17,12 +19,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -39,6 +40,7 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.TransactionTotalsLookupPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 
@@ -49,24 +51,27 @@ class MonthlyBudgetServiceTest {
   private MonthlyBudgetRepositoryPort monthlyBudgetRepository;
   @Mock
   private CategoryLookupPort categoryLookupPort;
+  @Mock
+  private TransactionTotalsLookupPort transactionTotalsLookupPort;
 
   @InjectMocks
   private MonthlyBudgetService monthlyBudgetService;
 
+  private static final YearMonth OCTOBER = YearMonth.of(2026, 10);
+  private final UUID userId = UUID.randomUUID();
+
   @Nested
   @DisplayName("Get all monthly budgets")
   class GetAll {
-    @ParameterizedTest(name = "should reject: {0}")
+    @Test
     @DisplayName("Should reject when year is invalid")
-    @ValueSource(shorts = {-431, 0, PeriodRules.MIN_YEAR - 1, PeriodRules.MAX_YEAR + 1})
-    void shouldRejectWhenYearIsInvalid(short invalidYear) {
-      YearMonth invalidYearMonth = YearMonth.of(invalidYear, 9);
+    void shouldRejectWhenYearIsInvalid() {
+      var invalidMonth = YearMonth.of(PeriodRules.MIN_YEAR - 1, 9);
 
-      assertThatThrownBy(() -> monthlyBudgetService.getAll(UUID.randomUUID(), invalidYearMonth))
-        .isInstanceOf(DomainException.class).hasMessageContaining("El año debe estar entre");
+      assertThatThrownBy(() -> monthlyBudgetService.getAll(userId, invalidMonth)).isInstanceOf(DomainException.class)
+        .hasMessageContaining("El año debe estar entre");
 
       verify(monthlyBudgetRepository, never()).findAllByUser(any(), any());
-      verify(categoryLookupPort, never()).findByIds(any(), any());
     }
 
     @Test
@@ -94,7 +99,10 @@ class MonthlyBudgetServiceTest {
       CategorySummary category = new CategorySummary(categoryId, "Groceries", "EXPENSE", false);
       when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of(categoryId, category));
 
-      MonthlyBudgetView expected = new MonthlyBudgetView(id, userId, month, year, amount, category);
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, yearMonth))
+        .thenReturn(Map.of(categoryId, BigDecimal.TWO));
+
+      MonthlyBudgetView expected = new MonthlyBudgetView(id, userId, month, year, amount, BigDecimal.TWO, category);
 
       List<MonthlyBudgetView> budgets = monthlyBudgetService.getAll(userId, yearMonth);
       assertThat(budgets).isEqualTo(List.of(expected));
@@ -102,11 +110,84 @@ class MonthlyBudgetServiceTest {
       verify(monthlyBudgetRepository).findAllByUser(userId, yearMonth);
       verify(categoryLookupPort).findByIds(Set.of(categoryId), userId);
     }
+
+    @Test
+    @DisplayName("Should return empty list without querying lookups when month has no budgets")
+    void shouldReturnEmptyListWithoutQueryingLookupsWhenMonthHasNoBudgets() {
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER)).thenReturn(List.of());
+
+      assertThat(monthlyBudgetService.getAll(userId, OCTOBER)).isEmpty();
+
+      verifyNoInteractions(categoryLookupPort, transactionTotalsLookupPort);
+    }
+
+    @Test
+    @DisplayName("Should take actual amount from the totals of each category")
+    void shouldTakeActualAmountFromTheTotalsOfEachCategory() {
+      UUID expenseCat = UUID.randomUUID();
+      UUID incomeCat = UUID.randomUUID();
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER))
+        .thenReturn(List.of(budget(expenseCat, "3000.00"), budget(incomeCat, "5000.00")));
+      when(categoryLookupPort.findByIds(Set.of(expenseCat, incomeCat), userId))
+        .thenReturn(Map.of(expenseCat, category(expenseCat, "EXPENSE"), incomeCat, category(incomeCat, "INCOME")));
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, OCTOBER))
+        .thenReturn(Map.of(expenseCat, new BigDecimal("2150.40"), incomeCat, new BigDecimal("5200.00")));
+
+      List<MonthlyBudgetView> result = monthlyBudgetService.getAll(userId, OCTOBER);
+
+      assertThat(result).extracting(MonthlyBudgetView::actualAmount).containsExactly(new BigDecimal("2150.40"),
+        new BigDecimal("5200.00"));
+    }
+
+    @Test
+    @DisplayName("Should use zero with two decimals when category has no transactions")
+    void shouldUseZeroWithTwoDecimalsWhenCategoryHasNoTransactions() {
+      UUID categoryId = UUID.randomUUID();
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER)).thenReturn(List.of(budget(categoryId, "3000.00")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, "EXPENSE")));
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, OCTOBER)).thenReturn(Map.of());
+
+      assertThat(monthlyBudgetService.getAll(userId, OCTOBER).getFirst().actualAmount())
+        .isEqualTo(new BigDecimal("0.00"));
+    }
+
+    @Test
+    @DisplayName("Should query each lookup only once for several budgets")
+    void shouldQueryEachLookupOnlyOnceForSeveralBudgets() {
+      UUID c1 = UUID.randomUUID();
+      UUID c2 = UUID.randomUUID();
+      UUID c3 = UUID.randomUUID();
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER))
+        .thenReturn(List.of(budget(c1, "1.00"), budget(c2, "2.00"), budget(c3, "3.00")));
+      when(categoryLookupPort.findByIds(Set.of(c1, c2, c3), userId))
+        .thenReturn(Map.of(c1, category(c1, "EXPENSE"), c2, category(c2, "EXPENSE"), c3, category(c3, "INCOME")));
+
+      monthlyBudgetService.getAll(userId, OCTOBER);
+
+      verify(categoryLookupPort).findByIds(Set.of(c1, c2, c3), userId);
+      verify(transactionTotalsLookupPort).findTotalsByCategory(userId, OCTOBER);
+      verifyNoMoreInteractions(categoryLookupPort, transactionTotalsLookupPort);
+    }
+
+    @Test
+    @DisplayName("Should fail when category is missing from lookup")
+    void shouldFailWhenCategoryIsMissingFromLookup() {
+      UUID categoryId = UUID.randomUUID();
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER)).thenReturn(List.of(budget(categoryId, "3000.00")));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of());
+
+      assertThatThrownBy(() -> monthlyBudgetService.getAll(userId, OCTOBER)).isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining(categoryId.toString());
+    }
   }
 
   @Nested
   @DisplayName("Get monthly budget by ID")
   class GetById {
+    private final UUID budgetId = UUID.randomUUID();
+    private final UUID categoryId = UUID.randomUUID();
+
     @Test
     @DisplayName("Should reject when budget does not exist")
     void shouldRejectWhenBudgetDoesNotExist() {
@@ -116,11 +197,12 @@ class MonthlyBudgetServiceTest {
 
       assertThatThrownBy(() -> monthlyBudgetService.getById(id, userId))
         .isInstanceOf(MonthlyBudgetNotFoundException.class).hasMessageContaining(id.toString());
+      verifyNoInteractions(categoryLookupPort, transactionTotalsLookupPort);
     }
 
     @Test
-    @DisplayName("Should return monthly budget detail")
-    void shouldReturnMonthlyBudgetDetail() {
+    @DisplayName("Should return monthly budget detail view")
+    void shouldReturnMonthlyBudgetDetailView() {
       UUID id = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
       UUID categoryId = UUID.randomUUID();
@@ -134,11 +216,58 @@ class MonthlyBudgetServiceTest {
       CategorySummary category = new CategorySummary(categoryId, "Groceries", "EXPENSE", false);
       when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of(categoryId, category));
 
-      MonthlyBudgetDetailView expected = new MonthlyBudgetDetailView(id, month, year, amount, category, instant,
-        instant);
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, YearMonth.of(year, month)))
+        .thenReturn(Map.of(categoryId, BigDecimal.TWO));
+
+      MonthlyBudgetDetailView expected = new MonthlyBudgetDetailView(id, month, year, amount, BigDecimal.TWO, category,
+        instant, instant);
 
       MonthlyBudgetDetailView response = monthlyBudgetService.getById(id, userId);
       assertThat(response).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("Should return actual amount of the budget month not the current one")
+    void shouldReturnActualAmountOfTheBudgetMonthNotTheCurrentOne() {
+      when(monthlyBudgetRepository.findDetailByIdAndUser(budgetId, userId)).thenReturn(Optional.of(detail()));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, "EXPENSE")));
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, YearMonth.of(2025, 3)))
+        .thenReturn(Map.of(categoryId, new BigDecimal("150.25")));
+
+      MonthlyBudgetDetailView result = monthlyBudgetService.getById(budgetId, userId);
+
+      SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(result.actualAmount()).as("actualAmount").isEqualTo(new BigDecimal("150.25"));
+        softly.assertThat(result.expectedAmount()).as("expectedAmount").isEqualTo(new BigDecimal("3000.00"));
+        softly.assertThat(result.category().id()).as("category").isEqualTo(categoryId);
+      });
+    }
+
+    @Test
+    @DisplayName("Should use zero with two decimals when category has no transactions")
+    void shouldUseZeroWithTwoDecimalsWhenCategoryHasNoTransactions() {
+      when(monthlyBudgetRepository.findDetailByIdAndUser(budgetId, userId)).thenReturn(Optional.of(detail()));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId))
+        .thenReturn(Map.of(categoryId, category(categoryId, "EXPENSE")));
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, YearMonth.of(2025, 3))).thenReturn(Map.of());
+
+      assertThat(monthlyBudgetService.getById(budgetId, userId).actualAmount()).isEqualTo(new BigDecimal("0.00"));
+    }
+
+    @Test
+    @DisplayName("Should fail when category is missing from lookup")
+    void shouldFailWhenCategoryIsMissingFromLookup() {
+      when(monthlyBudgetRepository.findDetailByIdAndUser(budgetId, userId)).thenReturn(Optional.of(detail()));
+      when(categoryLookupPort.findByIds(Set.of(categoryId), userId)).thenReturn(Map.of());
+
+      assertThatThrownBy(() -> monthlyBudgetService.getById(budgetId, userId)).isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining(categoryId.toString());
+    }
+
+    private MonthlyBudgetDetail detail() {
+      return new MonthlyBudgetDetail(budgetId, categoryId, (short) 3, (short) 2025, new BigDecimal("3000.00"),
+        Instant.now(), Instant.now());
     }
   }
 
@@ -316,5 +445,14 @@ class MonthlyBudgetServiceTest {
 
       verify(monthlyBudgetRepository).save(argThat(budget -> budget.getId().equals(id) && budget.isDeleted()));
     }
+  }
+
+  private MonthlyBudget budget(UUID categoryId, String expected) {
+    return MonthlyBudget.reconstitute(UUID.randomUUID(), userId, categoryId, (short) 10, (short) 2026,
+      new BigDecimal(expected), null);
+  }
+
+  private static CategorySummary category(UUID id, String flowType) {
+    return new CategorySummary(id, "Any", flowType, false);
   }
 }

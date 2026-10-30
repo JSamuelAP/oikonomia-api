@@ -1,5 +1,6 @@
 package dev.jsamuelap.oikonomiaapi.budget.application.service;
 
+import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategoryLookupPort;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.CategorySummary;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetDetail;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.MonthlyBudgetRepositoryPort;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.out.TransactionTotalsLookupPort;
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,7 @@ public class MonthlyBudgetService
     DeleteMonthlyBudgetUseCase {
   private final MonthlyBudgetRepositoryPort monthlyBudgetRepository;
   private final CategoryLookupPort categoryLookupPort;
+  private final TransactionTotalsLookupPort transactionTotalsLookupPort;
 
   @Override
   @Transactional(readOnly = true)
@@ -51,12 +55,19 @@ public class MonthlyBudgetService
     PeriodRules.requireSupportedYear(effectiveYearMonth);
 
     List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYearMonth);
+    if (budgets.isEmpty()) {
+      return List.of();
+    }
 
     Set<UUID> categoryIds = budgets.stream().map(MonthlyBudget::getCategoryId).collect(Collectors.toSet());
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);
 
-    return budgets.stream().map(b -> new MonthlyBudgetView(b.getId(), b.getUserId(), b.getMonth(), b.getYear(),
-      b.getExpectedAmount(), categories.get(b.getCategoryId()))).toList();
+    Map<UUID, BigDecimal> totals = transactionTotalsLookupPort.findTotalsByCategory(userId, effectiveYearMonth);
+
+    return budgets.stream()
+      .map(b -> new MonthlyBudgetView(b.getId(), b.getUserId(), b.getMonth(), b.getYear(), b.getExpectedAmount(),
+        totals.getOrDefault(b.getCategoryId(), MoneyRules.ZERO_AMOUNT), requireCategory(categories, b.getCategoryId())))
+      .toList();
   }
 
   @Override
@@ -65,11 +76,17 @@ public class MonthlyBudgetService
     MonthlyBudgetDetail budget = monthlyBudgetRepository.findDetailByIdAndUser(id, userId)
       .orElseThrow(() -> new MonthlyBudgetNotFoundException(id));
 
-    CategorySummary category = categoryLookupPort.findByIds(Set.of(budget.categoryId()), userId)
-      .get(budget.categoryId());
+    CategorySummary category = requireCategory(categoryLookupPort.findByIds(Set.of(budget.categoryId()), userId),
+      budget.categoryId());
 
-    return new MonthlyBudgetDetailView(budget.id(), budget.month(), budget.year(), budget.expectedAmount(), category,
-      budget.createdAt(), budget.updatedAt());
+    // Consultar el mes completo es irrelevante. Buscar por categoría requeriría
+    // otro índice
+    Map<UUID, BigDecimal> totals = transactionTotalsLookupPort.findTotalsByCategory(userId,
+      YearMonth.of(budget.year(), budget.month()));
+
+    return new MonthlyBudgetDetailView(budget.id(), budget.month(), budget.year(), budget.expectedAmount(),
+      totals.getOrDefault(budget.categoryId(), MoneyRules.ZERO_AMOUNT), category, budget.createdAt(),
+      budget.updatedAt());
   }
 
   @Override
@@ -118,6 +135,14 @@ public class MonthlyBudgetService
       budget.delete();
       monthlyBudgetRepository.save(budget);
     }
+  }
+
+  private static CategorySummary requireCategory(Map<UUID, CategorySummary> categories, UUID id) {
+    CategorySummary category = categories.get(id);
+    if (category == null) {
+      throw new IllegalStateException("La categoría %s de un presupuesto no existe".formatted(id));
+    }
+    return category;
   }
 
   private CategorySummary getCategory(UUID categoryId, UUID userId) {
