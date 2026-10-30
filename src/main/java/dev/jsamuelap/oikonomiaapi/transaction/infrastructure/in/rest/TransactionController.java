@@ -60,6 +60,7 @@ public class TransactionController {
     @Parameter(hidden = true)
     @AuthenticationPrincipal
     final AuthenticatedPrincipal principal,
+    // TODO: estandarizar a month y hacerlo obligatorio, igual en budgets
     @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01")
     @RequestParam(required = false)
     @DateTimeFormat(pattern = "yyyy-MM")

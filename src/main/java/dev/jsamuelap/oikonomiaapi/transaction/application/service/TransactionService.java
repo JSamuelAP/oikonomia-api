@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
@@ -20,6 +21,7 @@ import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCo
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.DeleteTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyBalanceUseCase;
+import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetMonthlyTotalsByCategoryUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.GetTransactionUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.ListTransactionsUseCase;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
@@ -43,7 +45,8 @@ public class TransactionService
     CreateTransactionUseCase,
     UpdateTransactionUseCase,
     DeleteTransactionUseCase,
-    GetMonthlyBalanceUseCase {
+    GetMonthlyBalanceUseCase,
+    GetMonthlyTotalsByCategoryUseCase {
   private final TransactionRepositoryPort transactionRepository;
   private final CategoryLookupPort categoryLookupPort;
 
@@ -124,8 +127,8 @@ public class TransactionService
 
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(amounts.keySet(), userId);
 
-    BigDecimal totalIncome = MonthlyBalance.ZERO_AMOUNT;
-    BigDecimal totalExpense = MonthlyBalance.ZERO_AMOUNT;
+    BigDecimal totalIncome = MoneyRules.ZERO_AMOUNT;
+    BigDecimal totalExpense = MoneyRules.ZERO_AMOUNT;
 
     for (Map.Entry<UUID, BigDecimal> entry : amounts.entrySet()) {
       CategorySummary category = categories.get(entry.getKey());
@@ -143,6 +146,13 @@ public class TransactionService
     }
 
     return new MonthlyBalance(month, totalIncome, totalExpense);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Map<UUID, BigDecimal> getTotalsByCategory(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
+    return transactionRepository.sumAmountsByCategory(userId, month);
   }
 
   private void validateCategoryExists(UUID userId, UUID categoryId) {

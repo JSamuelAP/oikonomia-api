@@ -61,6 +61,6 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
   @Override
   public Map<UUID, BigDecimal> sumAmountsByCategory(UUID userId, YearMonth month) {
     return jpaRepository.sumAmountsByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1)).stream()
-      .collect(Collectors.toMap(CategoryTotal::getCategoryId, CategoryTotal::getTotal));
+      .collect(Collectors.toUnmodifiableMap(CategoryTotal::getCategoryId, CategoryTotal::getTotal));
   }
 }

@@ -7,6 +7,7 @@ import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
 public final class MoneyRules {
   public static final int MAX_INTEGER_DIGITS = 10;
   public static final int MAX_SCALE = 2;
+  public static final BigDecimal ZERO_AMOUNT = new BigDecimal("0.00");
 
   private MoneyRules() {}
 
