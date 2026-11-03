@@ -1,6 +1,7 @@
 package dev.jsamuelap.oikonomiaapi.transaction.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -33,11 +34,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import dev.jsamuelap.oikonomiaapi.shared.domain.exception.DomainException;
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
 import dev.jsamuelap.oikonomiaapi.shared.domain.validation.PeriodRules;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.exception.TransactionNotFoundException;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.CreateTransactionCommand;
-import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.MonthlyBalance;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionDetailView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.TransactionView;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.port.in.UpdateTransactionCommand;
@@ -319,9 +320,9 @@ class TransactionServiceTest {
       var result = transactionService.getMonthlyBalance(userId, month);
       SoftAssertions.assertSoftly(softly -> {
         softly.assertThat(result.month()).isEqualTo(month);
-        softly.assertThat(result.totalIncome()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
-        softly.assertThat(result.totalExpense()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
-        softly.assertThat(result.balance()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+        softly.assertThat(result.totalIncome()).isEqualTo(MoneyRules.ZERO_AMOUNT);
+        softly.assertThat(result.totalExpense()).isEqualTo(MoneyRules.ZERO_AMOUNT);
+        softly.assertThat(result.balance()).isEqualTo(MoneyRules.ZERO_AMOUNT);
       });
       verify(categoryLookupPort, never()).findByIds(any(), any());
     }
@@ -410,6 +411,34 @@ class TransactionServiceTest {
 
     private static CategorySummary category(UUID id, String flowType, boolean deleted) {
       return new CategorySummary(id, "Any", flowType, deleted);
+    }
+  }
+
+  @Nested
+  @DisplayName("Get totals by category")
+  class GetTotalsByCategory {
+    private final UUID userId = UUID.randomUUID();
+    private final YearMonth month = YearMonth.of(PeriodRules.MIN_YEAR, 1);
+
+    @Test
+    @DisplayName("Should reject month when year is not supported")
+    void shouldRejectMonthWhenYearIsNotSupported() {
+      var invalidMonth = YearMonth.of(PeriodRules.MIN_YEAR - 1, 1);
+      assertThatThrownBy(() -> transactionService.getTotalsByCategory(userId, invalidMonth))
+        .isInstanceOf(DomainException.class);
+      verify(transactionRepository, never()).sumAmountsByCategory(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should delegate to repository with the given user and month")
+    void shouldDelegateToRepositoryWithTheGivenUserAndMonth() {
+      var categoryId = UUID.randomUUID();
+      when(transactionRepository.sumAmountsByCategory(userId, month))
+        .thenReturn(Map.of(categoryId, new BigDecimal("200.00")));
+
+      var result = transactionService.getTotalsByCategory(userId, month);
+
+      assertThat(result).containsOnly(entry(categoryId, new BigDecimal("200.00")));
     }
   }
 }

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import dev.jsamuelap.oikonomiaapi.shared.domain.validation.MoneyRules;
+
 @DisplayName("Monthly balance DTO")
 public class MonthlyBalanceTest {
   @Nested
@@ -38,7 +40,7 @@ public class MonthlyBalanceTest {
       MonthlyBalance balance = new MonthlyBalance(YearMonth.of(2025, 1), new BigDecimal("500.00"),
         new BigDecimal("500.00"));
 
-      assertThat(balance.balance()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+      assertThat(balance.balance()).isEqualTo(MoneyRules.ZERO_AMOUNT);
     }
 
     @Test
@@ -61,8 +63,8 @@ public class MonthlyBalanceTest {
       MonthlyBalance balance = MonthlyBalance.empty(month);
 
       assertThat(balance.month()).isEqualTo(month);
-      assertThat(balance.totalIncome()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
-      assertThat(balance.totalExpense()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+      assertThat(balance.totalIncome()).isEqualTo(MoneyRules.ZERO_AMOUNT);
+      assertThat(balance.totalExpense()).isEqualTo(MoneyRules.ZERO_AMOUNT);
     }
 
     @Test
@@ -71,7 +73,7 @@ public class MonthlyBalanceTest {
       YearMonth month = YearMonth.of(2025, 12);
       MonthlyBalance balance = MonthlyBalance.empty(month);
 
-      assertThat(balance.balance()).isEqualTo(MonthlyBalance.ZERO_AMOUNT);
+      assertThat(balance.balance()).isEqualTo(MoneyRules.ZERO_AMOUNT);
     }
   }
 }

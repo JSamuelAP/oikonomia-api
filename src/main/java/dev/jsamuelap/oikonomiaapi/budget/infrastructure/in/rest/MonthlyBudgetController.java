@@ -57,6 +57,7 @@ public class MonthlyBudgetController {
     @Parameter(hidden = true)
     @AuthenticationPrincipal
     final AuthenticatedPrincipal principal,
+    // TODO: estandarizar a month y hacerlo obligatorio, igual en transactions
     @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01")
     @RequestParam(required = false)
     @DateTimeFormat(pattern = "yyyy-MM")
@@ -71,10 +72,10 @@ public class MonthlyBudgetController {
   @GetMapping("/{id}")
   @Operation(summary = "Get monthly budget by ID", description = "Retrieves detailed information for a specific monthly budget")
   @ApiResponse(responseCode = "200", description = "Monthly budget retrieved successfully")
-  public ResponseEntity<MonthlyBudgetResponse> get(
+  public ResponseEntity<MonthlyBudgetDetailResponse> get(
     @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal,
     @Parameter(description = "Monthly budget ID", required = true) @PathVariable final UUID id) {
-    MonthlyBudgetResponse budget = mapper.toResponse(getMonthlyBudgetUseCase.getById(id, principal.userId()));
+    MonthlyBudgetDetailResponse budget = mapper.toResponse(getMonthlyBudgetUseCase.getById(id, principal.userId()));
     return ResponseEntity.ok(budget);
   }
 
