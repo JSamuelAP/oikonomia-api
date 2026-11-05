@@ -223,7 +223,7 @@ Convenciones:
 
 ## Pruebas
 
-Más de 350 test:
+Más de 400 test:
 
 - Pruebas unitarias para validar las invariantes de los modelos de dominio. Utilicé JUnit y AssertJ.
 - Pruebas unitarias de servicios. Utilicé Mockito para simular el comportamiento de otros componentes.
