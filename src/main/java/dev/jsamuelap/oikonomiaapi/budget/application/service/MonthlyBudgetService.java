@@ -18,8 +18,10 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.DeleteMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBalanceUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetBalance;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
@@ -43,7 +45,8 @@ public class MonthlyBudgetService
     GetMonthlyBudgetUseCase,
     CreateMonthlyBudgetUseCase,
     UpdateMonthlyBudgetUseCase,
-    DeleteMonthlyBudgetUseCase {
+    DeleteMonthlyBudgetUseCase,
+    GetMonthlyBalanceUseCase {
   private final MonthlyBudgetRepositoryPort monthlyBudgetRepository;
   private final CategoryLookupPort categoryLookupPort;
   private final TransactionTotalsLookupPort transactionTotalsLookupPort;
@@ -54,20 +57,7 @@ public class MonthlyBudgetService
     YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
     PeriodRules.requireSupportedYear(effectiveYearMonth);
 
-    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, effectiveYearMonth);
-    if (budgets.isEmpty()) {
-      return List.of();
-    }
-
-    Set<UUID> categoryIds = budgets.stream().map(MonthlyBudget::getCategoryId).collect(Collectors.toSet());
-    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);
-
-    Map<UUID, BigDecimal> totals = transactionTotalsLookupPort.findTotalsByCategory(userId, effectiveYearMonth);
-
-    return budgets.stream()
-      .map(b -> new MonthlyBudgetView(b.getId(), b.getUserId(), b.getMonth(), b.getYear(), b.getExpectedAmount(),
-        totals.getOrDefault(b.getCategoryId(), MoneyRules.ZERO_AMOUNT), requireCategory(categories, b.getCategoryId())))
-      .toList();
+    return loadViews(userId, effectiveYearMonth);
   }
 
   @Override
@@ -135,6 +125,30 @@ public class MonthlyBudgetService
       budget.delete();
       monthlyBudgetRepository.save(budget);
     }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public MonthlyBudgetBalance getMonthlyBalance(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
+    return MonthlyBudgetBalance.of(month, loadViews(userId, month));
+  }
+
+  private List<MonthlyBudgetView> loadViews(UUID userId, YearMonth month) {
+    List<MonthlyBudget> budgets = monthlyBudgetRepository.findAllByUser(userId, month);
+    if (budgets.isEmpty()) {
+      return List.of();
+    }
+
+    Set<UUID> categoryIds = budgets.stream().map(MonthlyBudget::getCategoryId).collect(Collectors.toSet());
+    Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);
+
+    Map<UUID, BigDecimal> totals = transactionTotalsLookupPort.findTotalsByCategory(userId, month);
+
+    return budgets.stream()
+      .map(b -> new MonthlyBudgetView(b.getId(), b.getUserId(), b.getMonth(), b.getYear(), b.getExpectedAmount(),
+        totals.getOrDefault(b.getCategoryId(), MoneyRules.ZERO_AMOUNT), requireCategory(categories, b.getCategoryId())))
+      .toList();
   }
 
   private static CategorySummary requireCategory(Map<UUID, CategorySummary> categories, UUID id) {

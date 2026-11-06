@@ -21,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.DeleteMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBalanceUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.GetMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.ListMonthlyBudgetUseCase;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetBalance;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetUseCase;
 import dev.jsamuelap.oikonomiaapi.shared.security.jwt.AuthenticatedPrincipal;
 
@@ -44,6 +46,7 @@ public class MonthlyBudgetController {
   private final CreateMonthlyBudgetUseCase createMonthlyBudgetUseCase;
   private final UpdateMonthlyBudgetUseCase updateMonthlyBudgetUseCase;
   private final DeleteMonthlyBudgetUseCase deleteMonthlyBudgetUseCase;
+  private final GetMonthlyBalanceUseCase getMonthlyBalanceUseCase;
   private final MonthlyBudgetRestMapper mapper;
 
   // spotless:off
@@ -110,5 +113,23 @@ public class MonthlyBudgetController {
     @Parameter(hidden = true) @AuthenticationPrincipal final AuthenticatedPrincipal principal) {
     deleteMonthlyBudgetUseCase.deleteById(id, principal.userId());
     return ResponseEntity.noContent().build();
+  }
+
+  // spotless:off
+  @GetMapping("/balance")
+  @Operation(
+    summary = "Get monthly balance",
+    description = "Retrieves the monthly balance (income, expense, net) for the authenticated user")
+  @ApiResponse(responseCode = "200", description = "Monthly balance retrieved successfully")
+  public ResponseEntity<MonthlyBudgetBalanceResponse> getMonthlyBalance(
+    @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01", required = true)
+    @DateTimeFormat(pattern = "yyyy-MM")
+    @RequestParam final YearMonth month,
+    @Parameter(hidden = true)
+    @AuthenticationPrincipal final AuthenticatedPrincipal principal
+  ) {
+    // spotless:on
+    MonthlyBudgetBalance balance = getMonthlyBalanceUseCase.getMonthlyBalance(principal.userId(), month);
+    return ResponseEntity.ok(mapper.toResponse(balance));
   }
 }

@@ -33,6 +33,7 @@ import dev.jsamuelap.oikonomiaapi.budget.domain.exception.MonthlyBudgetAlreadyEx
 import dev.jsamuelap.oikonomiaapi.budget.domain.exception.MonthlyBudgetNotFoundException;
 import dev.jsamuelap.oikonomiaapi.budget.domain.model.MonthlyBudget;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetBalance;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
@@ -444,6 +445,54 @@ class MonthlyBudgetServiceTest {
       monthlyBudgetService.deleteById(id, userId);
 
       verify(monthlyBudgetRepository).save(argThat(budget -> budget.getId().equals(id) && budget.isDeleted()));
+    }
+  }
+
+  @Nested
+  @DisplayName("Get monthly balance")
+  class GetBalance {
+    @Test
+    @DisplayName("Should reject month when year is not supported")
+    void shouldRejectMonthWhenYearIsNotSupported() {
+      var month = YearMonth.of(PeriodRules.MAX_YEAR + 1, 1);
+
+      assertThatThrownBy(() -> monthlyBudgetService.getMonthlyBalance(userId, month))
+        .isInstanceOf(DomainException.class);
+
+      verify(monthlyBudgetRepository, never()).findAllByUser(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return zero balance without querying lookups when month has no budgets")
+    void shouldReturnZeroBalanceWithoutQueryingLookupsWhenMonthHasNoBudgets() {
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER)).thenReturn(List.of());
+
+      MonthlyBudgetBalance result = monthlyBudgetService.getMonthlyBalance(userId, OCTOBER);
+
+      assertThat(result.expectedBalance()).isEqualTo(new BigDecimal("0.00"));
+      verifyNoInteractions(categoryLookupPort, transactionTotalsLookupPort);
+    }
+
+    @Test
+    @DisplayName("Should group budgets by the flow type of their category")
+    void shouldGroupBudgetsByTheFlowTypeOfTheirCategory() {
+      UUID incomeCat = UUID.randomUUID();
+      UUID expenseCat = UUID.randomUUID();
+      when(monthlyBudgetRepository.findAllByUser(userId, OCTOBER))
+        .thenReturn(List.of(budget(incomeCat, "5000.00"), budget(expenseCat, "3000.00")));
+      when(categoryLookupPort.findByIds(Set.of(incomeCat, expenseCat), userId))
+        .thenReturn(Map.of(incomeCat, category(incomeCat, "INCOME"), expenseCat, category(expenseCat, "EXPENSE")));
+      when(transactionTotalsLookupPort.findTotalsByCategory(userId, OCTOBER))
+        .thenReturn(Map.of(incomeCat, new BigDecimal("5200.00"), expenseCat, new BigDecimal("2150.40")));
+
+      MonthlyBudgetBalance result = monthlyBudgetService.getMonthlyBalance(userId, OCTOBER);
+
+      SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(result.income()).as("income")
+          .isEqualTo(new MonthlyBudgetBalance.FlowTotals(new BigDecimal("5000.00"), new BigDecimal("5200.00")));
+        softly.assertThat(result.expense()).as("expense")
+          .isEqualTo(new MonthlyBudgetBalance.FlowTotals(new BigDecimal("3000.00"), new BigDecimal("2150.40")));
+      });
     }
   }
 

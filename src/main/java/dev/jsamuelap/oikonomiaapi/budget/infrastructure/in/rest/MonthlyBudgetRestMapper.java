@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.CreateMonthlyBudgetCommand;
+import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetBalance;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetDetailView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.MonthlyBudgetView;
 import dev.jsamuelap.oikonomiaapi.budget.domain.port.in.UpdateMonthlyBudgetCommand;
@@ -24,4 +25,12 @@ public interface MonthlyBudgetRestMapper {
   CreateMonthlyBudgetCommand toCommand(CreateMonthlyBudgetRequest createMonthlyBudgetRequest, UUID userId);
 
   UpdateMonthlyBudgetCommand toCommand(UpdateMonthlyBudgetRequest updateMonthlyBudgetRequest, UUID id, UUID userId);
+
+  @Mapping(target = "month", expression = "java(monthlyBalance.month().toString())")
+  @Mapping(target = "expectedBalance", expression = "java(monthlyBalance.expectedBalance())")
+  @Mapping(target = "actualBalance", expression = "java(monthlyBalance.actualBalance())")
+  MonthlyBudgetBalanceResponse toResponse(MonthlyBudgetBalance monthlyBalance);
+
+  @Mapping(target = "remaining", expression = "java(flowTotals.remaining())")
+  MonthlyBudgetBalanceResponse.FlowTotalsResponse toResponse(MonthlyBudgetBalance.FlowTotals flowTotals);
 }
