@@ -27,7 +27,7 @@ public record MonthlyBudgetBalance(YearMonth month, FlowTotals income, FlowTotal
       } else if (category.isExpense()) {
         expense = expense.plus(budget.expectedAmount(), budget.actualAmount());
       } else {
-        throw new IllegalArgumentException("Tipo de flujo desconocido: " + category.flowType());
+        throw new IllegalStateException("Tipo de flujo desconocido: " + category.flowType());
       }
     }
     return new MonthlyBudgetBalance(month, income, expense);
