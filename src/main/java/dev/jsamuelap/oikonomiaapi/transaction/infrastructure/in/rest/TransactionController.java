@@ -53,22 +53,21 @@ public class TransactionController {
   @GetMapping()
   @Operation(
     summary = "Get all transactions",
-    description = "Retrieves a list of transactions for the authenticated user, optionally filtered by year-month"
+    description = "Retrieves a list of transactions for the authenticated user, filtered by month"
   )
   @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully")
   public ResponseEntity<List<TransactionResponse>> getAll(
     @Parameter(hidden = true)
     @AuthenticationPrincipal
     final AuthenticatedPrincipal principal,
-    // TODO: estandarizar a month y hacerlo obligatorio, igual en budgets
-    @Parameter(description = "Filter by year-month (format: yyyy-MM)", example = "2026-01")
-    @RequestParam(required = false)
+    @Parameter(description = "Filter by month (format: yyyy-MM)", example = "2026-01", required = true)
+    @RequestParam
     @DateTimeFormat(pattern = "yyyy-MM")
-    final YearMonth yearMonth
+    final YearMonth month
   ) {
     // spotless:on
     List<TransactionResponse> transactions = mapper
-      .toResponse(listTransactionsUseCase.getAll(principal.userId(), yearMonth));
+      .toResponse(listTransactionsUseCase.getAll(principal.userId(), month));
     return ResponseEntity.ok(transactions);
   }
 

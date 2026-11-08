@@ -10,7 +10,7 @@ import java.util.UUID;
 import dev.jsamuelap.oikonomiaapi.transaction.domain.model.Transaction;
 
 public interface TransactionRepositoryPort {
-  List<Transaction> findByUser(UUID userId, YearMonth yearMonth);
+  List<Transaction> findByUser(UUID userId, YearMonth month);
 
   Optional<Transaction> findByIdAndUser(UUID id, UUID userId);
 
