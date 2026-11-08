@@ -24,9 +24,9 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
   private final TransactionPersistenceMapper mapper;
 
   @Override
-  public List<Transaction> findByUser(UUID userId, YearMonth yearMonth) {
-    LocalDate startOfMonth = yearMonth.atDay(1);
-    LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+  public List<Transaction> findByUser(UUID userId, YearMonth month) {
+    LocalDate startOfMonth = month.atDay(1);
+    LocalDate startOfNextMonth = month.plusMonths(1).atDay(1);
     return jpaRepository.findActiveByUserIdAndDateRange(userId, startOfMonth, startOfNextMonth).stream()
       .map(mapper::toDomain).toList();
   }

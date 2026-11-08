@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,11 +51,10 @@ public class TransactionService
 
   @Override
   @Transactional(readOnly = true)
-  public List<TransactionView> getAll(UUID userId, YearMonth yearMonth) {
-    YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
-    PeriodRules.requireSupportedYear(effectiveYearMonth);
+  public List<TransactionView> getAll(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
 
-    List<Transaction> transactions = transactionRepository.findByUser(userId, effectiveYearMonth);
+    List<Transaction> transactions = transactionRepository.findByUser(userId, month);
 
     Set<UUID> categoryIds = transactions.stream().map(Transaction::getCategoryId).collect(Collectors.toSet());
     Map<UUID, CategorySummary> categories = categoryLookupPort.findByIds(categoryIds, userId);

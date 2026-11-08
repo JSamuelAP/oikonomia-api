@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -53,11 +52,10 @@ public class MonthlyBudgetService
 
   @Override
   @Transactional(readOnly = true)
-  public List<MonthlyBudgetView> getAll(UUID userId, YearMonth yearMonth) {
-    YearMonth effectiveYearMonth = Objects.requireNonNullElse(yearMonth, YearMonth.now());
-    PeriodRules.requireSupportedYear(effectiveYearMonth);
+  public List<MonthlyBudgetView> getAll(UUID userId, YearMonth month) {
+    PeriodRules.requireSupportedYear(month);
 
-    return loadViews(userId, effectiveYearMonth);
+    return loadViews(userId, month);
   }
 
   @Override

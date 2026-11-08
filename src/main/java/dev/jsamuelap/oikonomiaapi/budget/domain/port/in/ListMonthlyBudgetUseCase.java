@@ -5,5 +5,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ListMonthlyBudgetUseCase {
-  List<MonthlyBudgetView> getAll(UUID userId, YearMonth yearMonth);
+  List<MonthlyBudgetView> getAll(UUID userId, YearMonth month);
 }

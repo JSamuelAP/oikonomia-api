@@ -75,15 +75,6 @@ class TransactionServiceTest {
     }
 
     @Test
-    @DisplayName("Should calculate current year-month when null")
-    void shouldCalculateCurrentYearMonthWhenNull() {
-      UUID userId = UUID.randomUUID();
-      transactionService.getAll(userId, null);
-
-      verify(transactionRepository).findByUser(userId, YearMonth.now());
-    }
-
-    @Test
     @DisplayName("Should return transaction view")
     void shouldReturnTransactionView() {
       UUID id = UUID.randomUUID();

@@ -76,15 +76,6 @@ class MonthlyBudgetServiceTest {
     }
 
     @Test
-    @DisplayName("Should calculate current year when null")
-    void shouldCalculateCurrentYearWhenNull() {
-      UUID userId = UUID.randomUUID();
-      monthlyBudgetService.getAll(userId, null);
-
-      verify(monthlyBudgetRepository).findAllByUser(userId, YearMonth.now());
-    }
-
-    @Test
     @DisplayName("Should return monthly budget view")
     void shouldReturnMonthlyBudgetView() {
       UUID id = UUID.randomUUID();
