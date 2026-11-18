@@ -50,6 +50,7 @@ public class AuthController {
   @Operation(summary = "Register a new user account", description = "Creates a new user account")
   @ApiResponse(responseCode = "201", description = "User account registered successfully")
   @ApiResponse(responseCode = "409", description = "User with this email already exists")
+  @ApiResponse(responseCode = "429", description = "Demasiados intentos desde esta IP. Consulta «Límites de tasa» en la descripción de la API.")
   @SecurityRequirements
   public ResponseEntity<RegisterUserResponse> signup(
     @Parameter(description = "User account registration request", required = true) @Valid @RequestBody final RegisterUserRequest request) {
@@ -61,6 +62,7 @@ public class AuthController {
   @Operation(summary = "User login", description = "Authenticates a user and returns an access token with a refresh token cookie")
   @ApiResponse(responseCode = "200", description = "Login successful")
   @ApiResponse(responseCode = "401", description = "Invalid credentials")
+  @ApiResponse(responseCode = "429", description = "Demasiados intentos desde esta IP. Consulta «Límites de tasa» en la descripción de la API.")
   @SecurityRequirements
   public ResponseEntity<LoginResponse> login(
     @Parameter(description = "User login credentials", required = true) @Valid @RequestBody final AuthenticateUserRequest request) {
@@ -75,6 +77,7 @@ public class AuthController {
   @Operation(summary = "Refresh access token", description = "Refreshes the access token using the refresh token cookie")
   @ApiResponse(responseCode = "200", description = "Token refreshed successfully")
   @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+  @ApiResponse(responseCode = "429", description = "Demasiados intentos desde esta IP. Consulta «Límites de tasa» en la descripción de la API.")
   @SecurityRequirements
   public ResponseEntity<LoginResponse> refresh(
     @Parameter(hidden = true) @CookieValue(name = JwtCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie) {
