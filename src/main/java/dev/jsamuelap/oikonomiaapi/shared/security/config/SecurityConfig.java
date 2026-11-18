@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
   private final JwtService jwtService;
   private final RateLimitProperties rateLimitProperties;
-  private final JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationEntryPoint entryPoint,
@@ -46,7 +45,8 @@ public class SecurityConfig {
       }).addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
     if (rateLimitProperties.enabled()) {
-      http.addFilterBefore(new RateLimitFilter(rateLimitProperties, converter), JwtAuthenticationFilter.class);
+      http.addFilterAfter(new RateLimitFilter(rateLimitProperties, new JacksonJsonHttpMessageConverter()),
+        JwtAuthenticationFilter.class);
     }
 
     return http.build();
