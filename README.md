@@ -82,6 +82,8 @@ No conozco PostgreSQL, así que fue una buena oportunidad para aprenderlo.
 ![Lombok](https://img.shields.io/badge/Lombok-E91E63?logo=lombok&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white)
 ![OpenApi](https://img.shields.io/badge/OpenAPI_&_Swagger-6BA539?logo=openapiinitiative&logoColor=white)
+![Bucket4j](https://img.shields.io/badge/Bucket4j-2E7D32)
+![Caffeine](https://img.shields.io/badge/Caffeine-000000)
 
 ### Testing
 
@@ -198,14 +200,23 @@ Así manejé algunos problemas de seguridad:
 - **Tipos de tokens**: Se valida el claim `type` en el filtro JWT.
 - **Base de datos filtrada:** Las contraseñas se almacenan con BCrypt y los refresh tokens como hash SHA-256.
 - **Enumeración de usuarios:** Un login incorrecto no distingue si fue por el email o contraseña.
+- **Rate limiting:** Uso Bucket4j con Caffeine como caché para limitar las solicitudes:
+  - **Políticas por defecto:** login 5 solicitudes con recarga de 10 tokens cada 15 min; signup 5 con 5 cada hora;
+    refresh 10 con 10 cada minuto; el resto de la API 120 con 120 cada minuto.
+  - **Clave por ruta:** login, signup y refresh se limitan por IP; la API por el `id` del usuario cuando hay sesión y
+    por IP cuando no la hay. El filtro se ejecuta después del filtro JWT para conocer al usuario autenticado.
+  - **Respuestas:** cada respuesta limitada incluye `RateLimit-Limit` y `RateLimit-Remaining`; al superar el límite se
+    devuelve `429` con `Retry-After`.
+  - **CORS:** los preflight `OPTIONS` no consumen tokens.
+  - **Alcance:** solo se limitan las rutas bajo `/api/**`; Swagger, actuator y el resto quedan fuera.
 - **Datos del usuario:** Todas las consultas filtran por el `id` del usuario.
 
 Pendientes:
 
-- Rate limiting
 - Mitigación de ataque de temporización en el login
 - El access token revocado sigue siendo vigente hasta que expira
 - Logout cierra todas las sesiones, no solo una
+- Los buckets de rate limit viven en memoria, así que son por instancia y se reinician con la aplicación.
 
 ## API
 
@@ -220,6 +231,8 @@ Convenciones:
 - `ProblemDetail` para dar formatos a los errores (RFC 9457)
 - `POST` no devuelve el recurso, devuelve una cabecera con la ruta del endpoint para obtenerlo
 - `PUT` y `DELETE` devuelven `204`
+- Las respuestas limitadas incluyen `RateLimit-Limit` y `RateLimit-Remaining`; al exceder el límite se devuelve `429`
+  con `Retry-After` y un `ProblemDetail`
 
 ## Pruebas
 
@@ -231,6 +244,8 @@ Más de 400 test:
   real. Estas pruebas se ejecutan en Testcontainers.
 - Pruebas de extremo a extremo en el flujo completo de autenticación. RestTestClient y Testcontainers me permiten
   levantar un servidor donde probar.
+- Pruebas del rate limit: unitarias del filtro y de las propiedades, y una de extremo a extremo que valida cabeceras,
+  CORS, preflight y límites por usuario.
 - Prueba de arquitectura para validar los límites entre módulos con Spring Modulith.
 
 Considero que esta parte es una de las más importantes. Aprendí a diseñar pruebas, manejar todos los casos posibles y a

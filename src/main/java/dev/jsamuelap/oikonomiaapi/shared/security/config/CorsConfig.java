@@ -21,6 +21,7 @@ public class CorsConfig {
     configuration.setAllowedOrigins(corsProperties.allowedOrigins());
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    configuration.setExposedHeaders(List.of("Retry-After", "RateLimit-Limit", "RateLimit-Remaining"));
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

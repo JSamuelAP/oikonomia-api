@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 @OpenAPIDefinition(
   info = @Info(
     title = "Oikonomía API",
-    version = "1.0.0",
+    version = "1.1.0-SNAPSHOT",
     description = "REST API for Oikonomía personal finance management application.",
     contact = @Contact(name = "JSamuel", email = "sp4619168@gmail.com", url = "https://jsamuelap.github.io"),
     license = @License(name = "MIT", url = "https://opensource.org/licenses/MIT")

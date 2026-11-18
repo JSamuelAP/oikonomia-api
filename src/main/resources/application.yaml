@@ -26,6 +26,25 @@ app:
     access-token-ttl: 15m
     refresh-token-ttl: 30d
 
+  rate-limit:
+    enabled: true
+    login:
+      capacity: 5
+      refill-tokens: 10
+      refill-period: 15m
+    signup:
+      capacity: 5
+      refill-tokens: 5
+      refill-period: 1h
+    refresh:
+      capacity: 10
+      refill-tokens: 10
+      refill-period: 1m
+    api:
+      capacity: 120
+      refill-tokens: 120
+      refill-period: 1m
+
   security:
     cookie-secure: true
 
