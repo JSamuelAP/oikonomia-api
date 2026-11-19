@@ -134,7 +134,9 @@ planeados.
 
 ```text
 .
-├── .github/workflows/ci.yml                  Pipeline de CI
+├── .github/
+│   ├── workflows/ci.yml                      Pipeline de CI
+│   └── dependabot.yml                        Actualizaciones de dependencias
 ├── .githooks/                                Hooks pre-commit y pre-push
 ├── config/                                   Reglas de Checkstyle, PMD y Spotless
 ├── docs/
@@ -259,6 +261,8 @@ desarrollo:
 
 - **Hooks locales:** `pre-commit` válida el formato con Spotless. `pre-push` válida codificación y tests.
 - **CI:** GitHub Actions ejecuta verify con Testcontainers. Al integrar en main o develop, construye la imagen.
+- **Dependabot:** mantiene actualizadas las dependencias de Maven, las acciones de GitHub Actions y la imagen de
+  Docker abriendo pull requests automáticos.
 - **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen.
 - **CD:** próximamente
 
