@@ -215,6 +215,8 @@ Así manejé algunos problemas de seguridad:
     - **Alcance:** solo se limitan las rutas bajo `/api/**`; Swagger, actuator y el resto quedan fuera.
 - **Datos del usuario:** Todas las consultas filtran por el `id` del usuario.
 - **Análisis estático:** El código se analiza con CodeQL en cada integración (ver [Calidad y CI/CD](#calidad-y-cicd)).
+- **Cadena de suministro:** Las acciones de Docker del CI se fijan por commit SHA en lugar de tags, que pueden moverse o
+  comprometerse.
 
 Pendientes:
 
@@ -268,7 +270,8 @@ desarrollo:
   cada push/PR a `main`, semanalmente y bajo demanda.
 - **Dependabot:** mantiene actualizadas las dependencias de Maven, las acciones de GitHub Actions y la imagen de
   Docker abriendo pull requests automáticos.
-- **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen.
+- **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen. Las acciones de
+  Docker del CI se fijan por commit SHA (no por tag) para evitar que una versión comprometida inyecte código.
 - **CD:** próximamente
 
 La rama `main` no puede recibir commits directamente; deben integrarse mediante pull requests. Incluyo plantillas para
