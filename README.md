@@ -198,7 +198,10 @@ Así manejé algunos problemas de seguridad:
 
 - **Robo de tokens por XSS:** El refresh token se manda como una cookie `HttpOnly`. El refresh token se guarda en la
   memoria del frontend, no en local storage.
-- **CSRF:** `SameSite=Strict` y `Path` acotado a `/api/v1/auth`.
+- **CSRF:** Se deshabilita la protección CSRF de Spring porque la API es stateless y autentica con el header
+  `Authorization: Bearer`, que el navegador no adjunta automáticamente. La cookie del refresh token usa
+  `SameSite=Strict` y `Path` acotado a `/api/v1/auth`, así que no se envía en peticiones cross-site. Se debe reactivar
+  si se añade autenticación por cookie/sesión en otros endpoints.
 - **Refresh token robado:** Se rota el refresh token cuando se usa. Si se detecta que se usa un refresh token ya rotado,
   revoca todas las sesiones.
 - **Tipos de tokens**: Se valida el claim `type` en el filtro JWT.
