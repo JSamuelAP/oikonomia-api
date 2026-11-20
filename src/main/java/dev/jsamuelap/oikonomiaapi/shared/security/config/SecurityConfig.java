@@ -29,6 +29,10 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationEntryPoint entryPoint,
     @Value("${springdoc.api-docs.enabled:true}") boolean apiDocsEnabled,
     @Value("${springdoc.swagger-ui.enabled:true}") boolean swaggerUiEnabled) throws Exception {
+    // CSRF deshabilitado: API stateless autenticada con el header Bearer y refresh
+    // token en cookie SameSite=Strict, así que el navegador no envía credenciales
+    // cross-site. Ver la sección Seguridad del README para más detalles. Reactivar
+    // si se añade autenticación por cookie/sesión en otros endpoints.
     http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))

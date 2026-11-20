@@ -198,7 +198,10 @@ Así manejé algunos problemas de seguridad:
 
 - **Robo de tokens por XSS:** El refresh token se manda como una cookie `HttpOnly`. El refresh token se guarda en la
   memoria del frontend, no en local storage.
-- **CSRF:** `SameSite=Strict` y `Path` acotado a `/api/v1/auth`.
+- **CSRF:** Se deshabilita la protección CSRF de Spring porque la API es stateless y autentica con el header
+  `Authorization: Bearer`, que el navegador no adjunta automáticamente. La cookie del refresh token usa
+  `SameSite=Strict` y `Path` acotado a `/api/v1/auth`, así que no se envía en peticiones cross-site. Se debe reactivar
+  si se añade autenticación por cookie/sesión en otros endpoints.
 - **Refresh token robado:** Se rota el refresh token cuando se usa. Si se detecta que se usa un refresh token ya rotado,
   revoca todas las sesiones.
 - **Tipos de tokens**: Se valida el claim `type` en el filtro JWT.
@@ -215,6 +218,8 @@ Así manejé algunos problemas de seguridad:
     - **Alcance:** solo se limitan las rutas bajo `/api/**`; Swagger, actuator y el resto quedan fuera.
 - **Datos del usuario:** Todas las consultas filtran por el `id` del usuario.
 - **Análisis estático:** El código se analiza con CodeQL en cada integración (ver [Calidad y CI/CD](#calidad-y-cicd)).
+- **Cadena de suministro:** Las acciones de Docker del CI se fijan por commit SHA en lugar de tags, que pueden moverse o
+  comprometerse.
 
 Pendientes:
 
@@ -268,7 +273,8 @@ desarrollo:
   cada push/PR a `main`, semanalmente y bajo demanda.
 - **Dependabot:** mantiene actualizadas las dependencias de Maven, las acciones de GitHub Actions y la imagen de
   Docker abriendo pull requests automáticos.
-- **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen.
+- **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen. Las acciones de
+  Docker del CI se fijan por commit SHA (no por tag) para evitar que una versión comprometida inyecte código.
 - **CD:** próximamente
 
 La rama `main` no puede recibir commits directamente; deben integrarse mediante pull requests. Incluyo plantillas para
