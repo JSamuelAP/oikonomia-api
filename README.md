@@ -221,6 +221,9 @@ Así manejé algunos problemas de seguridad:
 - **Cadena de suministro:** Las acciones de Docker del CI se fijan por commit SHA en lugar de tags, que pueden moverse o
   comprometerse.
 
+Para reportar una vulnerabilidad, consulta la [política de seguridad](SECURITY.md). El repositorio acepta reportes
+privados de vulnerabilidades.
+
 Pendientes:
 
 - Mitigación de ataque de temporización en el login
