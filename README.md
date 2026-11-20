@@ -135,7 +135,9 @@ planeados.
 ```text
 .
 ├── .github/
-│   ├── workflows/ci.yml                      Pipeline de CI
+│   ├── workflows/
+│   │   ├── ci.yml                            Pipeline de CI
+│   │   └── codeql.yml                        Análisis de seguridad
 │   └── dependabot.yml                        Actualizaciones de dependencias
 ├── .githooks/                                Hooks pre-commit y pre-push
 ├── config/                                   Reglas de Checkstyle, PMD y Spotless
@@ -203,15 +205,16 @@ Así manejé algunos problemas de seguridad:
 - **Base de datos filtrada:** Las contraseñas se almacenan con BCrypt y los refresh tokens como hash SHA-256.
 - **Enumeración de usuarios:** Un login incorrecto no distingue si fue por el email o contraseña.
 - **Rate limiting:** Uso Bucket4j con Caffeine como caché para limitar las solicitudes:
-  - **Políticas por defecto:** login 5 solicitudes con recarga de 10 tokens cada 15 min; signup 5 con 5 cada hora;
-    refresh 10 con 10 cada minuto; el resto de la API 120 con 120 cada minuto.
-  - **Clave por ruta:** login, signup y refresh se limitan por IP; la API por el `id` del usuario cuando hay sesión y
-    por IP cuando no la hay. El filtro se ejecuta después del filtro JWT para conocer al usuario autenticado.
-  - **Respuestas:** cada respuesta limitada incluye `RateLimit-Limit` y `RateLimit-Remaining`; al superar el límite se
-    devuelve `429` con `Retry-After`.
-  - **CORS:** los preflight `OPTIONS` no consumen tokens.
-  - **Alcance:** solo se limitan las rutas bajo `/api/**`; Swagger, actuator y el resto quedan fuera.
+    - **Políticas por defecto:** login 5 solicitudes con recarga de 10 tokens cada 15 min; signup 5 con 5 cada hora;
+      refresh 10 con 10 cada minuto; el resto de la API 120 con 120 cada minuto.
+    - **Clave por ruta:** login, signup y refresh se limitan por IP; la API por el `id` del usuario cuando hay sesión y
+      por IP cuando no la hay. El filtro se ejecuta después del filtro JWT para conocer al usuario autenticado.
+    - **Respuestas:** cada respuesta limitada incluye `RateLimit-Limit` y `RateLimit-Remaining`; al superar el límite se
+      devuelve `429` con `Retry-After`.
+    - **CORS:** los preflight `OPTIONS` no consumen tokens.
+    - **Alcance:** solo se limitan las rutas bajo `/api/**`; Swagger, actuator y el resto quedan fuera.
 - **Datos del usuario:** Todas las consultas filtran por el `id` del usuario.
+- **Análisis estático:** El código se analiza con CodeQL en cada integración (ver [Calidad y CI/CD](#calidad-y-cicd)).
 
 Pendientes:
 
@@ -261,6 +264,8 @@ desarrollo:
 
 - **Hooks locales:** `pre-commit` válida el formato con Spotless. `pre-push` válida codificación y tests.
 - **CI:** GitHub Actions ejecuta verify con Testcontainers. Al integrar en main o develop, construye la imagen.
+- **Seguridad:** GitHub Actions ejecuta el análisis estático de CodeQL sobre el código Java y los workflows. Corre en
+  cada push/PR a `main`, semanalmente y bajo demanda.
 - **Dependabot:** mantiene actualizadas las dependencias de Maven, las acciones de GitHub Actions y la imagen de
   Docker abriendo pull requests automáticos.
 - **Docker:** Multietapa, aprovecho las capas separadas de Spring Boot para optimizar la imagen.
